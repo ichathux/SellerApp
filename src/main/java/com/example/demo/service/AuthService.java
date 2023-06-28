@@ -5,6 +5,8 @@ import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RefreshTokenRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.exception.SpringException;
+//import com.example.demo.model.NotificationEmail;
+import com.example.demo.model.NotificationEmail;
 import com.example.demo.model.SellerDetails;
 import com.example.demo.model.User;
 import com.example.demo.model.VerificationToken;
@@ -39,6 +41,7 @@ public class AuthService {
     private final JwtTokenService jwtProvider;
     private final RefreshTokenService refreshTokenService;
     private final SellerDetailsRepository sellerDetailsRepository;
+    private final MailService mailService;
 
     @Transactional
     public void signUp(RegisterRequest registerRequest) {
@@ -53,8 +56,12 @@ public class AuthService {
         sellerDetailsRepository.save(sellerDetails);
 
 
-
         String token = generateVerificationToken(user);
+
+        mailService.sendEmail(new NotificationEmail("Please activate your account" ,
+                user.getUsername() , "Thank you for signing up to Spring Reddit " +
+                "plese click on the below url to activate you account :" +
+                "http://localhost:8080/api/auth/accountVerification/" + token));
 
     }
 
@@ -70,15 +77,21 @@ public class AuthService {
     }
 
     public void verifyAccount(String token) {
+        log.info("verifying token " + token);
         Optional<VerificationToken> verificationToken = verificationTokenRepository.findByToken(token);
+        log.info("verifying user " + verificationToken.get().getUser().getUsername());
         verificationToken.orElseThrow(() -> new SpringException("Invalid Token"));
+        log.info("fetching user " + verificationToken.get().getUser().getUsername());
         fetchUserAndEnable(verificationToken.get());
     }
 
     @Transactional
     private void fetchUserAndEnable(VerificationToken verificationToken) {
+        log.info("fetching user and enabling");
         String username = verificationToken.getUser().getUsername();
+        log.info("enabling user " + username);
         User user = userRepository.findByUsername(username).orElseThrow(() -> new SpringException("User Not Fount"));
+        log.info("enabling user " + user.getUsername());
         user.setEnabled(true);
         userRepository.save(user);
 
@@ -87,7 +100,7 @@ public class AuthService {
     public AuthenticationResponse login(LoginRequest loginRequest) {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername()
-                ,loginRequest.getPassword()));
+                , loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtProvider.generateToken(authentication);
@@ -102,7 +115,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public User getCurrentUser() {
         log.info("getting current user");
-        log.info("getting current user : "+SecurityContextHolder.getContext().getAuthentication().getPrincipal() );
+        log.info("getting current user : " + SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         org.springframework.security.core.userdetails.User principal = (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 //        log.info(principal.getUsername());
         return userRepository.findByUsername(principal.getUsername())

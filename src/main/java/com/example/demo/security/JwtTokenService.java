@@ -28,16 +28,16 @@ public class JwtTokenService {
         this.verifier = JWT.require(this.hmac512).build();
     }
 
-//    public String generateToken(final UserDetails userDetails) {
+    //    public String generateToken(final UserDetails userDetails) {
 //        return JWT.create()
 //                .withSubject(userDetails.getUsername())
 //                .withExpiresAt(Date.from(Instant.now().plusMillis(jwtExpirationInMillis)))
 //                .sign(this.hmac512);
 //    }
-public String generateToken(Authentication authentication) {
-    User principal = (User) authentication.getPrincipal();
-    return generateTokenWithUsername(principal.getUsername());
-}
+    public String generateToken(Authentication authentication) {
+        User principal = (User) authentication.getPrincipal();
+        return generateTokenWithUsername(principal.getUsername());
+    }
 
     public String generateTokenWithUsername(String username) {
         return JWT.create()

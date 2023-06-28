@@ -33,7 +33,7 @@ public class AuthController {
 
     @GetMapping("accountVerification/{token}")
     public ResponseEntity<String> accountVerification(@PathVariable String token){
-        log.debug("starting to verify account : "+token);
+        log.info("starting to verify account : "+token);
         authService.verifyAccount(token);
         return new ResponseEntity<>("Account activated successfully", HttpStatus.OK);
     }
