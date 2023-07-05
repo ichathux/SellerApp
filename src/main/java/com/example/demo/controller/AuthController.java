@@ -28,6 +28,9 @@ public class AuthController {
     public ResponseEntity<String> signUp(@RequestBody RegisterRequest registerRequest){
         log.info("sign up request received : "+registerRequest);
         authService.signUp(registerRequest);
+        if (authService.checkUserAlreadyExist(registerRequest.getEmail())){
+            return new ResponseEntity<>("User already exist", HttpStatus.CONFLICT);
+        }
         return new ResponseEntity<>("User Registration Successful", HttpStatus.OK);
     }
 
@@ -38,7 +41,7 @@ public class AuthController {
         return new ResponseEntity<>("Account activated successfully", HttpStatus.OK);
     }
 
-    @PostMapping("/login")
+    @PostMapping("/signIn")
     public AuthenticationResponse login(@RequestBody LoginRequest loginRequest){
         log.info("Login request from :"+loginRequest);
         return authService.login(loginRequest);

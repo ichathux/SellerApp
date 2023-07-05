@@ -109,6 +109,7 @@ public class AuthService {
                 .refreshToken(refreshTokenService.generateRefreshToken().getToken())
                 .expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
                 .username(loginRequest.getUsername())
+                .sellerDetails(sellerDetailsRepository.findByUser(getCurrentUser()).get())
                 .build();
     }
 
@@ -131,6 +132,15 @@ public class AuthService {
                 .expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
                 .username(refreshToken.getUsername())
                 .build();
+    }
+
+    public boolean checkUserAlreadyExist(String username){
+        Optional<User> alreadyRegistered = userRepository.findByUsername(username);
+        if (alreadyRegistered.isPresent()){
+            return true;
+        }else {
+            return false;
+        }
     }
 
 }
