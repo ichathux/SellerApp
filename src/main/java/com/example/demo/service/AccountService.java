@@ -24,14 +24,23 @@ public class AccountService {
 
         sellerDetails.setAddress(sellerProfile.getAddress());
         sellerDetails.setUser(authService.getCurrentUser());
-        sellerDetails.setLogo(sellerProfile.getLogo());
+//        sellerDetails.setLogo(sellerProfile.getLogo());
         sellerDetails.setLocation(sellerProfile.getLocation());
         sellerDetails.setContactNo(sellerProfile.getContactNo());
         sellerDetails.setDisplayName(sellerProfile.getBusinessName());
-        sellerDetails.setBusinessType(sellerProfile.getBusinessType());
+//        sellerDetails.setBusinessType(sellerProfile.getBusinessType());
         sellerDetails.setCompleted(true);
 
         sellerDetailsRepository.save(sellerDetails);
+
+    }
+
+    public SellerDetails getUserProfile(){
+        if (sellerDetailsRepository.findByUser(authService.getCurrentUser()).isPresent()){
+            return sellerDetailsRepository.findByUser(authService.getCurrentUser()).get();
+        }else{
+            return new SellerDetails();
+        }
 
     }
 }

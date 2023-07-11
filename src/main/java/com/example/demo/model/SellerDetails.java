@@ -26,5 +26,5 @@ public class SellerDetails {
     private String logo;
     private String location;
     private boolean isCompleted = false;
-    private BusinessType businessType;
+//    private BusinessType businessType;
 }

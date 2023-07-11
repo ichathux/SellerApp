@@ -12,8 +12,8 @@ public class SellerProfile {
     private String businessName;
     private String ownerName;
     private String address;
-    private String ContactNo;
-    private String logo;
+    private String contactNo;
+//    private String logo;
     private String location;
-    private BusinessType businessType;
+    private String businessType;
 }

@@ -14,6 +14,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @AllArgsConstructor
@@ -43,14 +49,14 @@ public class SecurityConfiguration {
                 .formLogin( form -> {
                     try {
                         form
-                                .loginPage("/login")
-                                .failureUrl("/login?error")
+                                .loginPage("/sign-in")
+                                .failureUrl("/sign-in?error")
                                 .permitAll()
                                 .and()
                                 .logout()
                                 .clearAuthentication(true)
                                 .invalidateHttpSession(true)
-                                .logoutSuccessUrl("/login?logout")
+                                .logoutSuccessUrl("/sign-in?logout")
                                 .permitAll();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -60,7 +66,8 @@ public class SecurityConfiguration {
                 .and()
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
-            http.csrf().disable();
+            http.csrf().disable().cors();
+//            http.cors();
         return http.build();
     }
 
@@ -74,7 +81,6 @@ public class SecurityConfiguration {
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 
 
 }

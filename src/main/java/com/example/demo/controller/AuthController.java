@@ -18,7 +18,7 @@ import javax.validation.Valid;
 @RequestMapping("/api/auth")
 @Slf4j
 @AllArgsConstructor
-//@CrossOrigin(origins = "http://localhost:8080",allowCredentials = "true",allowedHeaders = "*")
+//@CrossOrigin(origins = "http://localhost:4200/")
 public class AuthController {
 
     private final AuthService authService;
@@ -26,12 +26,15 @@ public class AuthController {
 
     @PostMapping("signup")
     public ResponseEntity<String> signUp(@RequestBody RegisterRequest registerRequest){
-        log.info("sign up request received : "+registerRequest);
-        authService.signUp(registerRequest);
+//        log.info("sign up request received : "+registerRequest);
+
         if (authService.checkUserAlreadyExist(registerRequest.getEmail())){
-            return new ResponseEntity<>("User already exist", HttpStatus.CONFLICT);
+            return new ResponseEntity<>("User already exist", HttpStatus.ALREADY_REPORTED);
+        }else{
+            authService.signUp(registerRequest);
+            return new ResponseEntity<>("User Registration Successful", HttpStatus.OK);
         }
-        return new ResponseEntity<>("User Registration Successful", HttpStatus.OK);
+
     }
 
     @GetMapping("accountVerification/{token}")
