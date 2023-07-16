@@ -26,12 +26,6 @@ public class AccountController {
         return new ResponseEntity<>("complete", HttpStatus.OK);
     }
 
-    @GetMapping("test")
-    private ResponseEntity<String> testController(){
-        log.info("testing done");
-        return new ResponseEntity<>("test", HttpStatus.OK);
-    }
-
     @GetMapping("getDetails")
     private void getDetails(){
         log.info("getting details "+authService.getCurrentUser().getUsername());
