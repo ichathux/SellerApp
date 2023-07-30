@@ -9,9 +9,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
+//import javax.validation.constraints.Email;
+//import javax.validation.constraints.NotBlank;
+//import javax.validation.constraints.NotEmpty;
 import java.time.Instant;
 
 @Data
@@ -24,9 +24,9 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
-    @NotBlank(message = "username is required")
+//    @NotBlank(message = "username is required")
     private String username;
-    @NotBlank(message = "password is required")
+//    @NotBlank(message = "password is required")
     private String password;
     private Instant created;
     private boolean enabled;

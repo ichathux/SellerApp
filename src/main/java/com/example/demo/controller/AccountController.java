@@ -22,18 +22,18 @@ public class AccountController {
     @PostMapping("completeProfile")
     public ResponseEntity<String> completeAccount(@RequestBody SellerProfile sellerProfile){
         log.info("completing user account  : "+sellerProfile);
-        accountService.completeAccount(sellerProfile);
+//        accountService.completeAccount(sellerProfile);
         return new ResponseEntity<>("complete", HttpStatus.OK);
     }
 
-    @GetMapping("getDetails")
-    private void getDetails(){
-        log.info("getting details "+authService.getCurrentUser().getUsername());
-//        return new ResponseEntity<>(authService.getCurrentUser().getUsername() , HttpStatus.OK);
-    }
+//    @GetMapping("getDetails")
+//    private void getDetails(){
+//        log.info("getting details "+authService.getCurrentUser().getUsername());
+////        return new ResponseEntity<>(authService.getCurrentUser().getUsername() , HttpStatus.OK);
+//    }
 
-    @GetMapping("getSellerProfile")
-    private ResponseEntity<SellerDetails> getSellerProfile(){
-        return new ResponseEntity<>(accountService.getUserProfile(), HttpStatus.OK);
-    }
+//    @GetMapping("getSellerProfile")
+//    private ResponseEntity<SellerDetails> getSellerProfile(){
+//        return new ResponseEntity<>(accountService.getUserProfile(), HttpStatus.OK);
+//    }
 }

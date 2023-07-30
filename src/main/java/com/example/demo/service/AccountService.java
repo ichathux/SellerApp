@@ -16,31 +16,31 @@ public class AccountService {
     private final AuthService authService;
     private final SellerDetailsRepository sellerDetailsRepository;
 
-    public void completeAccount(SellerProfile sellerProfile){
+//    public void completeAccount(SellerProfile sellerProfile){
+//
+//        User currentUser = authService.getCurrentUser();
+//        SellerDetails sellerDetails = sellerDetailsRepository
+//                .findByUser(currentUser).orElseThrow(()-> new SpringException("No such a user"));
+//
+//        sellerDetails.setAddress(sellerProfile.getAddress());
+//        sellerDetails.setUser(authService.getCurrentUser());
+////        sellerDetails.setLogo(sellerProfile.getLogo());
+//        sellerDetails.setLocation(sellerProfile.getLocation());
+//        sellerDetails.setContactNo(Long.valueOf(sellerProfile.getContactNo()));
+//        sellerDetails.setDisplayName(sellerProfile.getBusinessName());
+////        sellerDetails.setBusinessType(sellerProfile.getBusinessType());
+//        sellerDetails.setCompleted(true);
+//
+//        sellerDetailsRepository.save(sellerDetails);
+//
+//    }
 
-        User currentUser = authService.getCurrentUser();
-        SellerDetails sellerDetails = sellerDetailsRepository
-                .findByUser(currentUser).orElseThrow(()-> new SpringException("No such a user"));
-
-        sellerDetails.setAddress(sellerProfile.getAddress());
-        sellerDetails.setUser(authService.getCurrentUser());
-//        sellerDetails.setLogo(sellerProfile.getLogo());
-        sellerDetails.setLocation(sellerProfile.getLocation());
-        sellerDetails.setContactNo(sellerProfile.getContactNo());
-        sellerDetails.setDisplayName(sellerProfile.getBusinessName());
-//        sellerDetails.setBusinessType(sellerProfile.getBusinessType());
-        sellerDetails.setCompleted(true);
-
-        sellerDetailsRepository.save(sellerDetails);
-
-    }
-
-    public SellerDetails getUserProfile(){
-        if (sellerDetailsRepository.findByUser(authService.getCurrentUser()).isPresent()){
-            return sellerDetailsRepository.findByUser(authService.getCurrentUser()).get();
-        }else{
-            return new SellerDetails();
-        }
-
-    }
+//    public SellerDetails getUserProfile(){
+//        if (sellerDetailsRepository.findByUser(authService.getCurrentUser()).isPresent()){
+//            return sellerDetailsRepository.findByUser(authService.getCurrentUser()).get();
+//        }else{
+//            return new SellerDetails();
+//        }
+//
+//    }
 }

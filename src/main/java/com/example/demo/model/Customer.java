@@ -9,8 +9,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotEmpty;
+//import javax.validation.constraints.Email;
+//import javax.validation.constraints.NotEmpty;
 
 @Data
 @Entity
@@ -19,14 +19,13 @@ import javax.validation.constraints.NotEmpty;
 @Builder
 public class Customer {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long customerId;
+//    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long contactNo;
     private String name;
-    private String contactNo;
     private String district;
     private String address;
     private String country;
-    @Email
-    @NotEmpty(message = "email is required")
+//    @Email
+//    @NotEmpty(message = "email is required")
     private String email;
 }

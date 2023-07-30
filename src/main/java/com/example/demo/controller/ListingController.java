@@ -22,21 +22,21 @@ public class ListingController {
 
     private final ListingService listingService;
 
-    @PostMapping(value = "bulkUpload",
-            consumes = MULTIPART_FORM_DATA_VALUE)
-    private ResponseEntity<String> uploadBulkListing(
-            @RequestPart("file") MultipartFile file)
-            throws IOException {
-        log.info("file received "+file.getName());
-        return listingService.uploadBulkListing(file);
-    }
+//    @PostMapping(value = "bulkUpload",
+//            consumes = MULTIPART_FORM_DATA_VALUE)
+//    private ResponseEntity<String> uploadBulkListing(
+//            @RequestPart("file") MultipartFile file)
+//            throws IOException {
+//        log.info("file received "+file.getName());
+//        return listingService.uploadBulkListing(file);
+//    }
 
-    @GetMapping("files")
-    private ResponseEntity<Page<ListingFileUpload>> getAllFiles(
-            @RequestParam(name = "page") int page,
-            @RequestParam(name = "size") int size){
-        return listingService.getUploadedFiles(page,size);
-    }
+//    @GetMapping("files")
+//    private ResponseEntity<Page<ListingFileUpload>> getAllFiles(
+//            @RequestParam(name = "page") int page,
+//            @RequestParam(name = "size") int size){
+//        return listingService.getUploadedFiles(page,size);
+//    }
 
 
 }
