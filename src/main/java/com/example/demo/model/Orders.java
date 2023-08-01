@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.example.demo.enums.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,4 +26,5 @@ public class Orders {
     @ManyToOne
     @JoinColumn(name = "seller_id", referencedColumnName = "contactNo")
     private SellerDetails sellerDetails;
+    private Status status;
 }

@@ -156,6 +156,8 @@ public class AuthService {
         return userMapper.toUserDto(user);
     }
 
+
+
 //    @Transactional(readOnly = true)
 //    public User getCurrentUser() {
 //        log.info("getting current user");

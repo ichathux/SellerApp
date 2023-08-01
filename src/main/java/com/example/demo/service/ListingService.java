@@ -1,20 +1,13 @@
 package com.example.demo.service;
 
+import com.example.demo.config.UserAuthProvider;
 import com.example.demo.enums.Status;
 import com.example.demo.exception.SpringException;
-import com.example.demo.model.Customer;
-import com.example.demo.model.ListingFileUpload;
-import com.example.demo.model.Orders;
-import com.example.demo.model.SellerDetails;
-import com.example.demo.repository.CustomerRepository;
-import com.example.demo.repository.ListingFileUploadRepository;
-import com.example.demo.repository.OrderRepository;
-import com.example.demo.repository.SellerDetailsRepository;
-import jxl.Sheet;
-import jxl.Workbook;
-import jxl.read.biff.BiffException;
+import com.example.demo.model.*;
+import com.example.demo.repository.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,58 +36,61 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor
 @Slf4j
 public class ListingService {
+    private final UserRepository userRepository;
 
     private final ListingFileUploadRepository listingFileUploadRepository;
     private final AuthService authService;
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
     private final SellerDetailsRepository sellerDetailsRepository;
+    private final UserAuthProvider userAuthProvider;
 
-//    public ResponseEntity<String> uploadBulkListing(MultipartFile file){
-//        log.info("handling request parts "+file.getOriginalFilename());
-//        String savingPath = "etc/seller-app/uploads/bulk-listing/bulk_upload_file";
-//        String filename = Instant.now().toString()+".xlsx";
-//        try {
-//            File f = new ClassPathResource("").getFile();
-//            final Path path = Paths.get(savingPath +File.separator+ filename);
-//
-//            if (!Files.exists(path)) {
-//                Files.createDirectories(path);
-//            }
-//
-//            Path filePath = path.resolve(file.getOriginalFilename());
-//            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-//            addFileToDataBase(file.getOriginalFilename(), savingPath);
-//            return new ResponseEntity<>("done",HttpStatus.OK);
-//
-//        } catch (IOException e) {
-//            log.error(e.getMessage());
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
+    public ResponseEntity<String> uploadBulkListing(MultipartFile file , String token) {
+        log.info("handling request parts " + file.getOriginalFilename());
+        String savingPath = "/etc/seller-app/uploads/bulk-listing/bulk_upload_file";
+        String folderName = Instant.now().toString();
+        try {
+            File f = new ClassPathResource("").getFile();
+            final Path path = Paths.get(savingPath + File.separator + folderName);
 
-//    private void addFileToDataBase(String filename, String location){
-//        try{
-//            ListingFileUpload listingFileUpload = new ListingFileUpload();
-//            listingFileUpload.setFileName(filename);
-//            listingFileUpload.setLocation(location);
-//            listingFileUpload.setDateTime(Instant.now());
-//            listingFileUpload.setStatus(Status.PENDING);
-//            listingFileUpload.setUser(authService.getCurrentUser());
-//            listingFileUploadRepository.save(listingFileUpload);
-//        }catch (Exception e){
-//            throw new SpringException("Error occurred while adding file to database");
-//        }
-//    }
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);
+            }
 
-//    public ResponseEntity<Page<ListingFileUpload>> getUploadedFiles(int page, int size){
-//        Pageable pageRequest = PageRequest.of(page, size);
-//
-//        Page<ListingFileUpload> pageResult = listingFileUploadRepository.findAllByUser(
-//                authService.getCurrentUser(),
-//                pageRequest).get();
-//        return new ResponseEntity<>(pageResult, HttpStatus.OK);
-//    }
+            Path filePath = path.resolve(file.getOriginalFilename());
+            Files.copy(file.getInputStream() , filePath , StandardCopyOption.REPLACE_EXISTING);
+            User user = userAuthProvider.getCurrentUserByToken(token);
+            addFileToDataBase(folderName , file.getOriginalFilename() , savingPath , user);
+            return new ResponseEntity<>("done" , HttpStatus.OK);
+
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void addFileToDataBase(String folderName , String filename , String location , User user) {
+        try {
+            ListingFileUpload listingFileUpload = new ListingFileUpload();
+            listingFileUpload.setFileName(filename);
+            listingFileUpload.setLocation(location + File.separator + folderName);
+            listingFileUpload.setDateTime(Instant.now());
+            listingFileUpload.setStatus(Status.PENDING);
+            listingFileUpload.setUser(user);
+//            readFile(listingFileUploadRepository.save(listingFileUpload));
+        } catch (Exception e) {
+            throw new SpringException("Error occurred while adding file to database");
+        }
+    }
+
+    public ResponseEntity<Page<ListingFileUpload>> getUploadedFiles(int page , int size , String token) {
+        Pageable pageRequest = PageRequest.of(page , size);
+
+        Page<ListingFileUpload> pageResult = listingFileUploadRepository.findAllByUserOrderByIdDesc(
+                userAuthProvider.getCurrentUserByToken(token) ,
+                pageRequest).get();
+        return new ResponseEntity<>(pageResult , HttpStatus.OK);
+    }
 
     @Scheduled(fixedDelay = 2, timeUnit = TimeUnit.MINUTES)
     private void readData(){
@@ -108,55 +107,106 @@ public class ListingService {
         }
     }
 
-    private void readFile(ListingFileUpload file){
+    private void readFile(ListingFileUpload file) {
+        log.info("start reading file ");
         try {
             file.setStatus(
                     Status.PROCESSING);
             listingFileUploadRepository.save(file);
-            Workbook workbook = Workbook.getWorkbook(new File(file.getLocation()+File.separator+file.getFileName()));
-            Sheet sheet = workbook.getSheet(0);
-            int rows = sheet.getRows();
-            int columns = sheet.getColumns();
-            Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findById(Long.valueOf(sheet.getCell(0,1).getContents()));
-            if (sellerDetails.isEmpty()){
-                new SpringException("Seller not found for provided ID");
-            }
-            List<Orders> list = new ArrayList<>();
+            FileInputStream fileInputStream = new FileInputStream(file.getLocation() + File.separator + file.getFileName());
+            Workbook workbook = WorkbookFactory.create(fileInputStream);
+            Sheet sheet = workbook.getSheetAt(0); // Assuming the data is on the first sheet
 
-            for(int i = 2; i < rows ; i++){
+            long sellerId = (long) sheet.getRow(0).getCell(1).getNumericCellValue();
+            Optional<User> user = userRepository
+                    .findById(sellerId);
+            Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUser(user.get());
+
+            int rowCount = sheet.getLastRowNum();
+            int columnCount = sheet.getRow(1).getLastCellNum();
+            ArrayList<Orders> list = new ArrayList<>();
+            System.out.println("Row - " + rowCount + " Cells " + columnCount);
+            for (Row row : sheet) {
+
                 Orders order = new Orders();
-                Optional<Customer> customer = customerRepository
-                        .findByContactNo(sheet.getCell(0,i).getContents());
-                if (customer.isPresent()){
-                    Customer cus = customer.get();
-                    order.setCustomer(cus);
-                }else{
-                    Customer cus = new Customer();
-                    cus.setContactNo(Long.valueOf(sheet.getCell(0,i).getContents()));
-                    cus.setEmail(sheet.getCell(1,i).getContents());
-                    cus.setName(sheet.getCell(2,i).getContents());
-                    cus.setAddress(sheet.getCell(3,i).getContents());
-                    cus.setDistrict(sheet.getCell(4,i).getContents());
-                    order.setCustomer(customerRepository.save(cus));
+
+                if (row.getRowNum() > 1) {
+                    Optional<Customer> customer = customerRepository
+                            .findByContactNo(Long.valueOf(getCellValueAsString(row.getCell(0))));
+                    if (customer.isPresent()) {
+                        Customer cus = customer.get();
+                        order.setCustomer(cus);
+                    } else {
+                        Customer cus = new Customer();
+                        cus.setContactNo(Long.valueOf(getCellValueAsString(row.getCell(0))));
+                        cus.setEmail(getCellValueAsString(row.getCell(1)));
+                        cus.setName(getCellValueAsString(row.getCell(2)));
+                        cus.setAddress(getCellValueAsString(row.getCell(3)));
+                        cus.setDistrict(getCellValueAsString(row.getCell(4)));
+                        order.setCustomer(customerRepository.save(cus));
+                    }
+                    order.setOrderDescription(getCellValueAsString(row.getCell(5)));
+                    order.setPrice(Double.valueOf(getCellValueAsString(row.getCell(6))));
+                    order.setDeliveryCharge(Double.valueOf(getCellValueAsString(row.getCell(7))));
+                    order.setSellerDetails(sellerDetails.get());
+                    order.setStatus(Status.READY_TO_PACK);
+                    list.add(order);
+
                 }
 
-                order.setOrderDescription(sheet.getCell(5,i).getContents());
-                order.setPrice(Double.valueOf(sheet.getCell(6,i).getContents()));
-                order.setDeliveryCharge(Double.valueOf(sheet.getCell(7,i).getContents()));
-                order.setSellerDetails(sellerDetails.get());
-                list.add(order);
             }
-            log.info("readed excel file contents ",list);
-//            orderRepository.saveAll(list);
-
-        } catch (IOException | BiffException e) {
+            orderRepository.saveAll(list);
+            workbook.close();
+            fileInputStream.close();
+            file.setStatus(Status.READY_TO_DOWNLOAD);
+            listingFileUploadRepository.save(file);
+        } catch (FileNotFoundException ex) {
             file.setStatus(Status.ERROR);
             listingFileUploadRepository.save(file);
-            log.error("reading excel "+e.getMessage());
-
+            log.error("reading excel " + ex.getMessage());
+        } catch (IOException ex) {
+            file.setStatus(Status.ERROR);
+            listingFileUploadRepository.save(file);
+            log.error("reading excel " + ex.getMessage());
+        } catch (Exception e) {
+            file.setStatus(Status.ERROR);
+            listingFileUploadRepository.save(file);
+            log.error("reading excel " + e.getMessage());
         }
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        String cellValue = "";
+        if (cell != null) {
+            switch (cell.getCellType()) {
+                case STRING:
+                    cellValue = cell.getStringCellValue();
+                    break;
+                case NUMERIC:
+                case FORMULA:
+                    cellValue = String.valueOf(cell.getNumericCellValue());
+                    break;
+                case BOOLEAN:
+                    cellValue = String.valueOf(cell.getBooleanCellValue());
+                    break;
+                default:
+                    cellValue = "";
+            }
+        }
+        return cellValue;
 
     }
 
+    public ResponseEntity<Page<Orders>> getListedOrders(int page , int size , String token){
+        Pageable pageRequest = PageRequest.of(page , size);
 
+        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUser(userAuthProvider.getCurrentUserByToken(token));
+        Optional<Page<Orders>> orders = orderRepository.findAllBySellerDetailsOrderByIdDesc(sellerDetails.get(), pageRequest);
+
+        if (orders.isEmpty()){
+            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        }
+        Page<Orders> pageResult = orders.get();
+        return new ResponseEntity<>(pageResult , HttpStatus.OK);
+    }
 }

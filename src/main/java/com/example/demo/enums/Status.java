@@ -5,7 +5,11 @@ public enum Status {
     PROCESSING("Processing"),
     UPLOADED("Uploaded"),
     READY_TO_DOWNLOAD("Downloadable"),
-    ERROR("Error");
+    ERROR("Error"),
+    READY_TO_PACK("Ready to packign"),
+    PACKED("Packed"),
+    COLLECTED_DELIVERY_PARTNER("Collected by delivery partner"),
+    COMPLETE("Complete");
 
     Status(String name) {
     }

@@ -14,5 +14,5 @@ import java.util.Optional;
 @Repository
 public interface ListingFileUploadRepository extends PagingAndSortingRepository<ListingFileUpload, Long> {
     Optional<List<ListingFileUpload>> findAllByStatus(Status status);
-    Optional<Page<ListingFileUpload>> findAllByUser(User user, Pageable pageable);
+    Optional<Page<ListingFileUpload>> findAllByUserOrderByIdDesc(User user, Pageable pageable);
 }
