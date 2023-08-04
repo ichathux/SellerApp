@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.config.UserAuthProvider;
+import com.example.demo.dto.OrderListDto;
 import com.example.demo.enums.Status;
 import com.example.demo.exception.SpringException;
 import com.example.demo.model.*;
@@ -150,6 +151,8 @@ public class ListingService {
                     order.setDeliveryCharge(Double.valueOf(getCellValueAsString(row.getCell(7))));
                     order.setSellerDetails(sellerDetails.get());
                     order.setStatus(Status.READY_TO_PACK);
+                    order.setCreatedAt(Instant.now());
+                    order.setUpdatedAt(Instant.now());
                     list.add(order);
 
                 }
@@ -208,5 +211,36 @@ public class ListingService {
         }
         Page<Orders> pageResult = orders.get();
         return new ResponseEntity<>(pageResult , HttpStatus.OK);
+    }
+
+
+    public ResponseEntity<String> addSingleOrder(String token , Orders orders) {
+
+        try{
+            Optional<Customer> customer = customerRepository.findByContactNo(orders.getCustomer().getContactNo());
+            if (customer.isPresent()){
+                orders.setCustomer(customer.get());
+            }else{
+                orders.setCustomer(customerRepository.save(orders.getCustomer()));;
+            }
+            User user = userAuthProvider.getCurrentUserByToken(token);
+            SellerDetails sellerDetails = sellerDetailsRepository.findByUser(user).get();
+            orders.setSellerDetails(sellerDetails);
+            orders.setCreatedAt(Instant.now());
+            orders.setUpdatedAt(Instant.now());
+            System.out.println(orders);
+            orderRepository.save(orders);
+            return new ResponseEntity<>("done",HttpStatus.OK);
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+            e.getStackTrace();
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    public ResponseEntity<String> generateBulkUploadExcelFile(String token , List<Orders> list) {
+
+        return null;
     }
 }

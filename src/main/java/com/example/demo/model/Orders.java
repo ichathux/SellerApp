@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.Instant;
 
 
 @Entity
@@ -27,4 +28,6 @@ public class Orders {
     @JoinColumn(name = "seller_id", referencedColumnName = "contactNo")
     private SellerDetails sellerDetails;
     private Status status;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

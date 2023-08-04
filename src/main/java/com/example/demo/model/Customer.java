@@ -19,13 +19,10 @@ import javax.persistence.Id;
 @Builder
 public class Customer {
     @Id
-//    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long contactNo;
     private String name;
     private String district;
     private String address;
     private String country;
-//    @Email
-//    @NotEmpty(message = "email is required")
     private String email;
 }
