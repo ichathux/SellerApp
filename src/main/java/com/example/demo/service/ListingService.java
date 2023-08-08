@@ -310,4 +310,9 @@ public class ListingService {
             return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
         }
     }
+
+    public ResponseEntity<Page<Orders>> getOrdersByDate(Instant startDate , Instant endDate, int page, int size) {
+        Pageable pageRequest = PageRequest.of(page , size);
+        return new ResponseEntity<>(orderRepository.findByCreatedAtBetween(startDate, endDate, pageRequest).get(), HttpStatus.OK);
+    }
 }

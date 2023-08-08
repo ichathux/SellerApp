@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -68,5 +69,15 @@ public class ListingController {
     private ResponseEntity<List<BulkInputDto>> getBulkInputList(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
         return listingService.getBulkInputList(token);
+    }
+
+    @GetMapping("searchByDate")
+    private ResponseEntity<Page<Orders>> getOrdersByDate(
+            @RequestParam("startDate") Instant startDate,
+            @RequestParam("endDate") Instant endDate,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size){
+        log.info("start date - "+startDate+ " "+"end date - "+endDate);
+        return listingService.getOrdersByDate(startDate, endDate, page, size);
     }
 }

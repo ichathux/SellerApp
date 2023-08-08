@@ -24,10 +24,9 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
-//    @NotBlank(message = "username is required")
     private String username;
-//    @NotBlank(message = "password is required")
     private String password;
     private Instant created;
     private boolean enabled;
+    private String requestToken;
 }

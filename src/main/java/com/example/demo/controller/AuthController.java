@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.config.UserAuthProvider;
 import com.example.demo.dto.*;
+import com.example.demo.mappers.UserMapper;
 import com.example.demo.model.User;
 import com.example.demo.service.AuthService;
 import com.example.demo.service.RefreshTokenService;
@@ -26,33 +27,14 @@ public class AuthController {
     private final AuthService authService;
     private final RefreshTokenService refreshTokenService;
     private final UserAuthProvider userAuthProvider;
-
-//    @PostMapping("signup")
-//    public ResponseEntity<String> signUp(@RequestBody RegisterRequest registerRequest){
-////        log.info("sign up request received : "+registerRequest);
-//
-//        if (authService.checkUserAlreadyExist(registerRequest.getEmail())){
-//            return new ResponseEntity<>("User already exist", HttpStatus.ALREADY_REPORTED);
-//        }else{
-//            authService.signUp(registerRequest);
-//            return new ResponseEntity<>("User Registration Successful", HttpStatus.OK);
-//        }
-//
-//    }
-//
-//    @GetMapping("accountVerification/{token}")
-//    public ResponseEntity<String> accountVerification(@PathVariable String token){
-//        log.info("starting to verify account : "+token);
-//        authService.verifyAccount(token);
-//        return new ResponseEntity<>("Account activated successfully", HttpStatus.OK);
-//    }
-
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody CredentialDto loginRequest){
         log.info("Login request from :"+loginRequest);
         ResponseEntity<UserDto> userDto = authService.login(loginRequest);
-        userDto.getBody().setToken(userAuthProvider.createToken(userDto.getBody()));
-//        SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        String token = userAuthProvider.createToken(userDto.getBody());
+        userDto.getBody().setToken(token);
+        String reqToken = authService.getRequestTokenForUser(userDto.getBody().getUsername());
+        userDto.getBody().setRequestToken(reqToken);
         System.out.println(" user name -> "+SecurityContextHolder.getContext().toString());
         return new ResponseEntity<>(userDto.getBody(),HttpStatus.OK);
     }
@@ -61,8 +43,11 @@ public class AuthController {
     public ResponseEntity<UserDto> register(@RequestBody SignUpDto signUpDto){
         log.info("register request get");
         UserDto createdUser = authService.register(signUpDto);
-        createdUser.setToken(userAuthProvider.createToken(createdUser));
-        return ResponseEntity.created(URI.create("/users/" + createdUser.getId())).body(createdUser);
+        String token = userAuthProvider.createToken(createdUser);
+        createdUser.setToken(token);
+        authService.setRequestTokenForUser(token,createdUser.getUsername());
+        createdUser.setRequestToken(token);
+        return ResponseEntity.created(URI.create("/users/" + createdUser.getId ())).body(createdUser);
 
     }
 //    @PostMapping("refresh/token")

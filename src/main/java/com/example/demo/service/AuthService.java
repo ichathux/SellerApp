@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.config.UserAuthProvider;
 import com.example.demo.dto.*;
 import com.example.demo.exception.AppException;
 import com.example.demo.exception.SpringException;
@@ -43,6 +44,7 @@ public class AuthService {
     private final SellerDetailsRepository sellerDetailsRepository;
     private final MailService mailService;
     private final UserMapper userMapper;
+//    private final UserAuthProvider userAuthProvider;
 
     public ResponseEntity<UserDto> login(CredentialDto credentialsDto) {
         User user = userRepository.findByUsername(credentialsDto.getUsername())
@@ -58,14 +60,15 @@ public class AuthService {
 
         Optional<User> optionalUser = userRepository.findByUsername(userDto.getUsername());
         if (optionalUser.isPresent()) {
-            throw new AppException("Login already exists", HttpStatus.BAD_REQUEST);
+            throw new AppException("Login already exists", HttpStatus.CONFLICT);
         }
 
         User user = userMapper.signUpToUser(userDto);
         user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.getPassword())));
         user.setUsername(userDto.getUsername());
-        SellerDetails sellerDetails = new SellerDetails();
+        user.setCreated(Instant.now());
 
+        SellerDetails sellerDetails = new SellerDetails();
         User savedUser = userRepository.save(user);
         sellerDetails.setUsername(savedUser.getUsername());
         sellerDetails.setOwnerName(userDto.getFirstName()+" "+userDto.getLastName());
@@ -77,7 +80,10 @@ public class AuthService {
         sellerDetailsRepository.save(sellerDetails);
         return userMapper.toUserDto(savedUser);
     }
-
+    public String getRequestTokenForUser(String username){
+        Optional<User> user = userRepository.findByUsername(username);
+        return user.get().getRequestToken();
+    }
     public UserDto findByLogin(String login) {
         User user = userRepository.findByUsername(login)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
@@ -85,4 +91,11 @@ public class AuthService {
     }
 
 
+    public void setRequestTokenForUser(String token , String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()){
+            user.get().setRequestToken(token);
+            userRepository.save(user.get());
+        }
+    }
 }
