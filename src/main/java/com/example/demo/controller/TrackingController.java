@@ -18,10 +18,8 @@ public class TrackingController {
     private ResponseEntity<String> updateTrackingStep(@RequestParam(name = "type") int state ,
                                                       @RequestParam(name = "id") long orderId ,
                                                       @RequestParam(name = "token") String token) {
-
         boolean st;
         st = state == 1;
-
         return trackingService.changeTrackingStage(orderId , token , st);
     }
 }

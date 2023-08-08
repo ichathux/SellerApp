@@ -313,6 +313,6 @@ public class ListingService {
 
     public ResponseEntity<Page<Orders>> getOrdersByDate(Instant startDate , Instant endDate, int page, int size) {
         Pageable pageRequest = PageRequest.of(page , size);
-        return new ResponseEntity<>(orderRepository.findByCreatedAtBetween(startDate, endDate, pageRequest).get(), HttpStatus.OK);
+        return new ResponseEntity<>(orderRepository.findByCreatedAtBetweenOrderByIdDesc(startDate, endDate, pageRequest).get(), HttpStatus.OK);
     }
 }

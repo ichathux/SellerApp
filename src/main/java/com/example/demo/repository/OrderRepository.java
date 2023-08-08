@@ -13,5 +13,5 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends CrudRepository<Orders, Long> {
     Optional<Page<Orders>> findAllBySellerDetailsOrderByIdDesc(SellerDetails sellerDetails, Pageable pageable);
-    Optional<Page<Orders>> findByCreatedAtBetween(Instant startDate, Instant endDate, Pageable pageable);
+    Optional<Page<Orders>> findByCreatedAtBetweenOrderByIdDesc(Instant startDate, Instant endDate, Pageable pageable);
 }
