@@ -17,15 +17,11 @@ public class SellerDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long contactNo;
-    @OneToOne
-    @JoinColumn(name = "userId", referencedColumnName = "userId")
-    private User user;
+    private String username;
     private String ownerName;
     private String displayName;
     private String address;
-//    private String ContactNo;
     private String logo;
     private String location;
     private boolean isCompleted = false;
-//    private BusinessType businessType;
 }

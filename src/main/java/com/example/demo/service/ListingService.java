@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.config.UserAuthProvider;
-import com.example.demo.dto.OrderListDto;
+import com.example.demo.dto.BulkInputDto;
 import com.example.demo.enums.Status;
 import com.example.demo.exception.SpringException;
 import com.example.demo.model.*;
@@ -29,9 +29,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -40,11 +42,11 @@ public class ListingService {
     private final UserRepository userRepository;
 
     private final ListingFileUploadRepository listingFileUploadRepository;
-    private final AuthService authService;
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
     private final SellerDetailsRepository sellerDetailsRepository;
     private final UserAuthProvider userAuthProvider;
+    private final HashMap<String, BulkInputDto> listHashMap;
 
     public ResponseEntity<String> uploadBulkListing(MultipartFile file , String token) {
         log.info("handling request parts " + file.getOriginalFilename());
@@ -78,7 +80,6 @@ public class ListingService {
             listingFileUpload.setDateTime(Instant.now());
             listingFileUpload.setStatus(Status.PENDING);
             listingFileUpload.setUser(user);
-//            readFile(listingFileUploadRepository.save(listingFileUpload));
         } catch (Exception e) {
             throw new SpringException("Error occurred while adding file to database");
         }
@@ -95,7 +96,11 @@ public class ListingService {
 
     @Scheduled(fixedDelay = 2, timeUnit = TimeUnit.MINUTES)
     private void readData(){
+        readBulkExcelUploadValues();
+        readBulkNormalInputValues();
+    }
 
+    private void readBulkExcelUploadValues() {
         Optional <List<ListingFileUpload>> list = listingFileUploadRepository
                 .findAllByStatus(
                         Status.PENDING);
@@ -106,6 +111,31 @@ public class ListingService {
                 readFile(file);
             }
         }
+    }
+
+    private void readBulkNormalInputValues(){
+        log.info("reading item list from hashmap");
+                                                                                                                                                                   var list2 = listHashMap.entrySet()
+                .stream()
+                .filter(s -> s.getValue().getStatus().equals(Status.PENDING))
+                .collect(Collectors.toList());
+
+        List<Orders> orders = new ArrayList<>();
+        for (var item : list2){
+            BulkInputDto bulkInputDto = item.getValue();
+            orders = makeOrderObject(bulkInputDto, orders);
+            bulkInputDto.setStatus(Status.COMPLETE);
+            listHashMap.replace(item.getKey(), bulkInputDto);
+        }
+        orderRepository.saveAll(orders);
+    }
+
+    private List<Orders> makeOrderObject(BulkInputDto bulkInputDto, List<Orders> orders) {
+        for (Orders order : bulkInputDto.getOrders()){
+            order = checkCustomer(order);
+            orders.add(order);
+        }
+        return orders;
     }
 
     private void readFile(ListingFileUpload file) {
@@ -121,7 +151,11 @@ public class ListingService {
             long sellerId = (long) sheet.getRow(0).getCell(1).getNumericCellValue();
             Optional<User> user = userRepository
                     .findById(sellerId);
-            Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUser(user.get());
+            if (user.isEmpty()){
+                log.error("given username not found in database");
+                throw new SpringException("given username not found in database");
+            }
+            Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(user.get().getUsername());
 
             int rowCount = sheet.getLastRowNum();
             int columnCount = sheet.getRow(1).getLastCellNum();
@@ -134,6 +168,7 @@ public class ListingService {
                 if (row.getRowNum() > 1) {
                     Optional<Customer> customer = customerRepository
                             .findByContactNo(Long.valueOf(getCellValueAsString(row.getCell(0))));
+
                     if (customer.isPresent()) {
                         Customer cus = customer.get();
                         order.setCustomer(cus);
@@ -150,7 +185,7 @@ public class ListingService {
                     order.setPrice(Double.valueOf(getCellValueAsString(row.getCell(6))));
                     order.setDeliveryCharge(Double.valueOf(getCellValueAsString(row.getCell(7))));
                     order.setSellerDetails(sellerDetails.get());
-                    order.setStatus(Status.READY_TO_PACK);
+                    order.setStatus(Status.ORDER_PLACED);
                     order.setCreatedAt(Instant.now());
                     order.setUpdatedAt(Instant.now());
                     list.add(order);
@@ -203,7 +238,7 @@ public class ListingService {
     public ResponseEntity<Page<Orders>> getListedOrders(int page , int size , String token){
         Pageable pageRequest = PageRequest.of(page , size);
 
-        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUser(userAuthProvider.getCurrentUserByToken(token));
+        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(userAuthProvider.getUsername(token));
         Optional<Page<Orders>> orders = orderRepository.findAllBySellerDetailsOrderByIdDesc(sellerDetails.get(), pageRequest);
 
         if (orders.isEmpty()){
@@ -217,30 +252,62 @@ public class ListingService {
     public ResponseEntity<String> addSingleOrder(String token , Orders orders) {
 
         try{
-            Optional<Customer> customer = customerRepository.findByContactNo(orders.getCustomer().getContactNo());
-            if (customer.isPresent()){
-                orders.setCustomer(customer.get());
-            }else{
-                orders.setCustomer(customerRepository.save(orders.getCustomer()));;
-            }
-            User user = userAuthProvider.getCurrentUserByToken(token);
-            SellerDetails sellerDetails = sellerDetailsRepository.findByUser(user).get();
-            orders.setSellerDetails(sellerDetails);
+            orders = checkCustomer(orders);
+            orders = checkSellerDetails(token , orders);
+
             orders.setCreatedAt(Instant.now());
             orders.setUpdatedAt(Instant.now());
-            System.out.println(orders);
             orderRepository.save(orders);
             return new ResponseEntity<>("done",HttpStatus.OK);
         }catch (Exception e){
-            System.out.println(e.getMessage());
             e.getStackTrace();
             return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }
 
-    public ResponseEntity<String> generateBulkUploadExcelFile(String token , List<Orders> list) {
+    private Orders checkSellerDetails(String token , Orders orders) {
+        SellerDetails sellerDetails = sellerDetailsRepository.findByUsername(userAuthProvider.getUsername(token)).get();
+        orders.setSellerDetails(sellerDetails);
 
-        return null;
+        return orders;
+    }
+
+    private Orders checkCustomer(Orders orders) {
+        Optional<Customer> customer = customerRepository.findByContactNo(orders.getCustomer().getContactNo());
+        if (customer.isPresent()){
+            orders.setCustomer(customer.get());
+        }else{
+            orders.setCustomer(customerRepository.save(orders.getCustomer()));;
+        }
+        return orders;
+    }
+
+    public ResponseEntity<String> generateBulkUploadList(String token , List<Orders> list) {
+        String username = userAuthProvider.getUsername(token);
+        BulkInputDto bulkInputDto = new BulkInputDto(Instant.now(), list, Status.PENDING, username);
+        listHashMap.put(username , bulkInputDto);
+        return new ResponseEntity<>("done", HttpStatus.OK);
+    }
+
+    public ResponseEntity<List<BulkInputDto>> getBulkInputList(String token){
+        String username = userAuthProvider.getUsername(token);
+        System.out.println(listHashMap);
+        ArrayList<BulkInputDto> list = new ArrayList<>();
+        if (!listHashMap.isEmpty()){
+            if (listHashMap.containsKey(username)){
+                for (String un : listHashMap.keySet()){
+                    if (un.trim().equals(username.trim())){
+                        list.add(listHashMap.get(un));
+                    }
+                }
+                return new ResponseEntity<>(list, HttpStatus.OK);
+            }
+            else {
+                return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+            }
+        }else {
+            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        }
     }
 }

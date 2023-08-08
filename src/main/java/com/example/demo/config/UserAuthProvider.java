@@ -66,18 +66,6 @@ public class UserAuthProvider {
         return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
     }
 
-//    public void getUserDetails(String token){
-//        Algorithm algorithm = Algorithm.HMAC256(secretKey);
-//
-//        JWTVerifier verifier = JWT.require(algorithm)
-//                .build();
-//
-//        DecodedJWT decoded = verifier.verify(token);
-//        System.out.println("username - "+decoded.getIssuer());
-//        System.out.println("first name - "+decoded.getClaim("firstName"));
-//        System.out.println("last name - "+decoded.getClaim("lastName"));
-//    }
-
     public Authentication validateTokenStrongly(String token) {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
 
@@ -101,6 +89,17 @@ public class UserAuthProvider {
         DecodedJWT decoded = verifier.verify(t);
 
         return userRepository.findByUsername(decoded.getIssuer()).get();
+    }
+
+    public String getUsername(String token){
+        String t = token.split(" ")[1];
+        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+
+        JWTVerifier verifier = JWT.require(algorithm)
+                .build();
+
+        DecodedJWT decoded = verifier.verify(t);
+        return decoded.getIssuer();
     }
 
 }

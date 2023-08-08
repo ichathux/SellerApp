@@ -29,5 +29,8 @@ public class Orders {
     private SellerDetails sellerDetails;
     private Status status;
     private Instant createdAt;
+    private Instant packedAt;
+    private Instant collectedAt;
+    private Instant deliveredAt;
     private Instant updatedAt;
 }

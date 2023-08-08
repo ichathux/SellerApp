@@ -6,7 +6,7 @@ public enum Status {
     UPLOADED("Uploaded"),
     READY_TO_DOWNLOAD("Downloadable"),
     ERROR("Error"),
-    READY_TO_PACK("Ready to packign"),
+    ORDER_PLACED("Order placed"),
     PACKED("Packed"),
     COLLECTED_DELIVERY_PARTNER("Collected by delivery partner"),
     COMPLETE("Complete");

@@ -50,11 +50,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody CredentialDto loginRequest){
         log.info("Login request from :"+loginRequest);
-        UserDto userDto = authService.login(loginRequest);
-        userDto.setToken(userAuthProvider.createToken(userDto));
+        ResponseEntity<UserDto> userDto = authService.login(loginRequest);
+        userDto.getBody().setToken(userAuthProvider.createToken(userDto.getBody()));
 //        SecurityContextHolder.getContext().getAuthentication().getCredentials();
         System.out.println(" user name -> "+SecurityContextHolder.getContext().toString());
-        return ResponseEntity.ok(userDto);
+        return new ResponseEntity<>(userDto.getBody(),HttpStatus.OK);
     }
 
     @PostMapping("/register")

@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.OrderListDto;
+import com.example.demo.dto.BulkInputDto;
 import com.example.demo.model.ListingFileUpload;
 import com.example.demo.model.Orders;
 import com.example.demo.service.ListingService;
@@ -61,6 +61,12 @@ public class ListingController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token ,
             @RequestBody List<Orders> list) {
         log.info("retrieved lis : " + list);
-        return listingService.generateBulkUploadExcelFile(token , list);
+        return listingService.generateBulkUploadList(token , list);
+    }
+
+    @GetMapping("getBulkInputList")
+    private ResponseEntity<List<BulkInputDto>> getBulkInputList(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
+        return listingService.getBulkInputList(token);
     }
 }
