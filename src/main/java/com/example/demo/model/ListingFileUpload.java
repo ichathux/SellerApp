@@ -16,7 +16,5 @@ public class ListingFileUpload {
     private String location;
     private Instant dateTime;
     private Status status;
-    @OneToOne
-    @JoinColumn(name = "userId", referencedColumnName = "userId")
-    private User user;
+    private String username;
 }

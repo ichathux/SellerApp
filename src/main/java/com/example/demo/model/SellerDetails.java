@@ -15,7 +15,6 @@ import javax.persistence.*;
 public class SellerDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long contactNo;
     private String username;
     private String ownerName;

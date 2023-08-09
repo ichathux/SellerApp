@@ -24,14 +24,12 @@ import java.util.Optional;
 public class TrackingService {
 
     private final OrderRepository orderRepository;
-    private final SellerDetailsRepository sellerDetailsRepository;
     private final UserRepository userRepository;
 
     public boolean checkOrderIdIsValid(Long orderID , String token) {
         Optional<Orders> order = orderRepository.findById(orderID);
         if (order.isPresent()) {
-            SellerDetails sellerDetails = order.get().getSellerDetails();
-            Optional<User> user = userRepository.findByUsername(sellerDetails.getUsername());
+            Optional<User> user = userRepository.findByUsername(order.get().getSellerUsername());
             return user.filter(value -> token.equals(value.getRequestToken())).isPresent();
         } else return false;
     }

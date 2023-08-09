@@ -5,15 +5,19 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Id;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 public class SellerProfile {
-    private String businessName;
+    private Long id;
+    private Long contactNo;
+    private String username;
     private String ownerName;
+    private String displayName;
     private String address;
-    private String contactNo;
-//    private String logo;
+    private String logo;
     private String location;
-    private String businessType;
+    private boolean isCompleted;
 }

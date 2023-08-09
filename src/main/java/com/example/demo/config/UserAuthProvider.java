@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -29,6 +30,7 @@ public class UserAuthProvider {
 
     private final AuthService userService;
     private final UserRepository userRepository;
+
     @PostConstruct
     protected void init() {
         // this is to avoid having the raw secret key available in the JVM
@@ -44,8 +46,8 @@ public class UserAuthProvider {
                 .withIssuer(user.getUsername())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
-                .withClaim("firstName", user.getFirstName())
-                .withClaim("lastName", user.getLastName())
+                .withClaim("firstName" , user.getFirstName())
+                .withClaim("lastName" , user.getLastName())
                 .sign(algorithm);
     }
 
@@ -63,7 +65,7 @@ public class UserAuthProvider {
                 .lastName(decoded.getClaim("lastName").asString())
                 .build();
 
-        return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+        return new UsernamePasswordAuthenticationToken(user , null , Collections.emptyList());
     }
 
     public Authentication validateTokenStrongly(String token) {
@@ -76,10 +78,10 @@ public class UserAuthProvider {
 
         UserDto user = userService.findByLogin(decoded.getIssuer());
 
-        return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+        return new UsernamePasswordAuthenticationToken(user , null , Collections.emptyList());
     }
 
-    public User getCurrentUserByToken(String token){
+    public User getCurrentUserByToken(String token) {
         String t = token.split(" ")[1];
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
 
@@ -91,7 +93,7 @@ public class UserAuthProvider {
         return userRepository.findByUsername(decoded.getIssuer()).get();
     }
 
-    public String getUsername(String token){
+    public String getUsername(String token) {
         String t = token.split(" ")[1];
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
 
@@ -100,6 +102,14 @@ public class UserAuthProvider {
 
         DecodedJWT decoded = verifier.verify(t);
         return decoded.getIssuer();
+    }
+
+    public String getCurrentUserUsername() {
+        return ((UserDto) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getUsername();
     }
 
 }

@@ -21,17 +21,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -60,10 +56,10 @@ public class ListingService {
                 Files.createDirectories(path);
             }
 
-            Path filePath = path.resolve(file.getOriginalFilename());
+            Path filePath = path.resolve(Objects.requireNonNull(file.getOriginalFilename()));
             Files.copy(file.getInputStream() , filePath , StandardCopyOption.REPLACE_EXISTING);
-            User user = userAuthProvider.getCurrentUserByToken(token);
-            addFileToDataBase(folderName , file.getOriginalFilename() , savingPath , user);
+            addFileToDataBase(folderName , file.getOriginalFilename() , savingPath);
+
             return new ResponseEntity<>("done" , HttpStatus.OK);
 
         } catch (IOException e) {
@@ -72,66 +68,75 @@ public class ListingService {
         }
     }
 
-    private void addFileToDataBase(String folderName , String filename , String location , User user) {
+    private void addFileToDataBase(String folderName , String filename , String location) {
         try {
+            log.info("adding file " + filename + " to database");
             ListingFileUpload listingFileUpload = new ListingFileUpload();
             listingFileUpload.setFileName(filename);
             listingFileUpload.setLocation(location + File.separator + folderName);
             listingFileUpload.setDateTime(Instant.now());
             listingFileUpload.setStatus(Status.PENDING);
-            listingFileUpload.setUser(user);
+            listingFileUpload.setUsername(userAuthProvider.getCurrentUserUsername());
+            listingFileUploadRepository.save(listingFileUpload);
         } catch (Exception e) {
             throw new SpringException("Error occurred while adding file to database");
         }
     }
 
-    public ResponseEntity<Page<ListingFileUpload>> getUploadedFiles(int page , int size , String token) {
-        Pageable pageRequest = PageRequest.of(page , size);
+    public ResponseEntity<Page<ListingFileUpload>> getUploadedFiles(int page ,
+                                                                    int size) {
+        Pageable pageRequest = PageRequest
+                .of(page , size);
 
-        Page<ListingFileUpload> pageResult = listingFileUploadRepository.findAllByUserOrderByIdDesc(
-                userAuthProvider.getCurrentUserByToken(token) ,
-                pageRequest).get();
-        return new ResponseEntity<>(pageResult , HttpStatus.OK);
+        Optional<Page<ListingFileUpload>> pageResult = listingFileUploadRepository
+                .findAllByUsernameOrderByIdDesc(
+                        userAuthProvider.getCurrentUserUsername() ,
+                        pageRequest);
+
+        return pageResult
+                .map(listingFileUploads -> new ResponseEntity<>(listingFileUploads , HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(null , HttpStatus.NO_CONTENT));
     }
 
     @Scheduled(fixedDelay = 2, timeUnit = TimeUnit.MINUTES)
-    private void readData(){
+    private void readData() {
         readBulkExcelUploadValues();
         readBulkNormalInputValues();
     }
 
     private void readBulkExcelUploadValues() {
-        Optional <List<ListingFileUpload>> list = listingFileUploadRepository
+        Optional<List<ListingFileUpload>> list = listingFileUploadRepository
                 .findAllByStatus(
                         Status.PENDING);
 
-        log.info("total file in pending status "+list.get().size());
-        if (list.isPresent()){
-            for (ListingFileUpload file : list.get()){
+        log.info("total file in pending status " + list.get().size());
+        if (list.isPresent()) {
+            for (ListingFileUpload file : list.get()) {
                 readFile(file);
             }
         }
     }
 
-    private void readBulkNormalInputValues(){
+    private void readBulkNormalInputValues() {
         log.info("reading item list from hashmap");
-                                                                                                                                                                   var list2 = listHashMap.entrySet()
+        var list2 = listHashMap.entrySet()
                 .stream()
                 .filter(s -> s.getValue().getStatus().equals(Status.PENDING))
                 .collect(Collectors.toList());
 
         List<Orders> orders = new ArrayList<>();
-        for (var item : list2){
+        for (var item : list2) {
             BulkInputDto bulkInputDto = item.getValue();
-            orders = makeOrderObject(bulkInputDto, orders);
+            orders = makeOrderObject(bulkInputDto , orders);
             bulkInputDto.setStatus(Status.COMPLETE);
-            listHashMap.replace(item.getKey(), bulkInputDto);
+            listHashMap.replace(item.getKey() , bulkInputDto);
         }
         orderRepository.saveAll(orders);
     }
 
-    private List<Orders> makeOrderObject(BulkInputDto bulkInputDto, List<Orders> orders) {
-        for (Orders order : bulkInputDto.getOrders()){
+    private List<Orders> makeOrderObject(BulkInputDto bulkInputDto ,
+                                         List<Orders> orders) {
+        for (Orders order : bulkInputDto.getOrders()) {
             order = checkCustomer(order);
             orders.add(order);
         }
@@ -147,16 +152,6 @@ public class ListingService {
             FileInputStream fileInputStream = new FileInputStream(file.getLocation() + File.separator + file.getFileName());
             Workbook workbook = WorkbookFactory.create(fileInputStream);
             Sheet sheet = workbook.getSheetAt(0); // Assuming the data is on the first sheet
-
-            long sellerId = (long) sheet.getRow(0).getCell(1).getNumericCellValue();
-            Optional<User> user = userRepository
-                    .findById(sellerId);
-            if (user.isEmpty()){
-                log.error("given username not found in database");
-                throw new SpringException("given username not found in database");
-            }
-            Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(user.get().getUsername());
-
             int rowCount = sheet.getLastRowNum();
             int columnCount = sheet.getRow(1).getLastCellNum();
             ArrayList<Orders> list = new ArrayList<>();
@@ -184,7 +179,7 @@ public class ListingService {
                     order.setOrderDescription(getCellValueAsString(row.getCell(5)));
                     order.setPrice(Double.valueOf(getCellValueAsString(row.getCell(6))));
                     order.setDeliveryCharge(Double.valueOf(getCellValueAsString(row.getCell(7))));
-                    order.setSellerDetails(sellerDetails.get());
+                    order.setSellerUsername(file.getUsername());
                     order.setStatus(Status.ORDER_PLACED);
                     order.setCreatedAt(Instant.now());
                     order.setUpdatedAt(Instant.now());
@@ -198,14 +193,6 @@ public class ListingService {
             fileInputStream.close();
             file.setStatus(Status.READY_TO_DOWNLOAD);
             listingFileUploadRepository.save(file);
-        } catch (FileNotFoundException ex) {
-            file.setStatus(Status.ERROR);
-            listingFileUploadRepository.save(file);
-            log.error("reading excel " + ex.getMessage());
-        } catch (IOException ex) {
-            file.setStatus(Status.ERROR);
-            listingFileUploadRepository.save(file);
-            log.error("reading excel " + ex.getMessage());
         } catch (Exception e) {
             file.setStatus(Status.ERROR);
             listingFileUploadRepository.save(file);
@@ -235,84 +222,127 @@ public class ListingService {
 
     }
 
-    public ResponseEntity<Page<Orders>> getListedOrders(int page , int size , String token){
+    public ResponseEntity<Page<Orders>> getListedOrders(int page ,
+                                                        int size) {
         Pageable pageRequest = PageRequest.of(page , size);
 
-        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(userAuthProvider.getUsername(token));
-        Optional<Page<Orders>> orders = orderRepository.findAllBySellerDetailsOrderByIdDesc(sellerDetails.get(), pageRequest);
+        Optional<Page<Orders>> orders = orderRepository
+                .findAllBySellerUsernameOrderByIdDesc(userAuthProvider.getCurrentUserUsername() , pageRequest);
 
-        if (orders.isEmpty()){
-            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        if (orders.isEmpty()) {
+            return new ResponseEntity<>(null , HttpStatus.NO_CONTENT);
         }
         Page<Orders> pageResult = orders.get();
         return new ResponseEntity<>(pageResult , HttpStatus.OK);
     }
 
 
-    public ResponseEntity<String> addSingleOrder(String token , Orders orders) {
+    public ResponseEntity<String> addSingleOrder(String token ,
+                                                 Orders orders) {
 
-        try{
+        try {
             orders = checkCustomer(orders);
             orders = checkSellerDetails(token , orders);
 
             orders.setCreatedAt(Instant.now());
             orders.setUpdatedAt(Instant.now());
             orderRepository.save(orders);
-            return new ResponseEntity<>("done",HttpStatus.OK);
-        }catch (Exception e){
+            return new ResponseEntity<>("done" , HttpStatus.OK);
+        } catch (Exception e) {
             e.getStackTrace();
-            return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage() , HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }
 
-    private Orders checkSellerDetails(String token , Orders orders) {
-        SellerDetails sellerDetails = sellerDetailsRepository.findByUsername(userAuthProvider.getUsername(token)).get();
-        orders.setSellerDetails(sellerDetails);
-
+    private Orders checkSellerDetails(String token ,
+                                      Orders orders) {
+        orders.setSellerUsername(userAuthProvider.getUsername(token));
         return orders;
     }
 
     private Orders checkCustomer(Orders orders) {
         Optional<Customer> customer = customerRepository.findByContactNo(orders.getCustomer().getContactNo());
-        if (customer.isPresent()){
+        if (customer.isPresent()) {
             orders.setCustomer(customer.get());
-        }else{
-            orders.setCustomer(customerRepository.save(orders.getCustomer()));;
+        } else {
+            orders.setCustomer(customerRepository.save(orders.getCustomer()));
+            ;
         }
         return orders;
     }
 
     public ResponseEntity<String> generateBulkUploadList(String token , List<Orders> list) {
-        String username = userAuthProvider.getUsername(token);
-        BulkInputDto bulkInputDto = new BulkInputDto(Instant.now(), list, Status.PENDING, username);
+        String username = userAuthProvider.getCurrentUserUsername();
+        BulkInputDto bulkInputDto = new BulkInputDto(Instant.now() , list , Status.PENDING , username);
         listHashMap.put(username , bulkInputDto);
-        return new ResponseEntity<>("done", HttpStatus.OK);
+        return new ResponseEntity<>("done" , HttpStatus.OK);
     }
 
-    public ResponseEntity<List<BulkInputDto>> getBulkInputList(String token){
-        String username = userAuthProvider.getUsername(token);
+    public ResponseEntity<List<BulkInputDto>> getBulkInputList() {
+        String username = userAuthProvider.getCurrentUserUsername();
         System.out.println(listHashMap);
         ArrayList<BulkInputDto> list = new ArrayList<>();
-        if (!listHashMap.isEmpty()){
-            if (listHashMap.containsKey(username)){
-                for (String un : listHashMap.keySet()){
-                    if (un.trim().equals(username.trim())){
+        if (!listHashMap.isEmpty()) {
+            if (listHashMap.containsKey(username)) {
+                for (String un : listHashMap.keySet()) {
+                    if (un.trim().equals(username.trim())) {
                         list.add(listHashMap.get(un));
                     }
                 }
-                return new ResponseEntity<>(list, HttpStatus.OK);
+                return new ResponseEntity<>(list , HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(null , HttpStatus.NO_CONTENT);
             }
-            else {
-                return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
-            }
-        }else {
-            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(null , HttpStatus.NO_CONTENT);
         }
     }
 
-    public ResponseEntity<Page<Orders>> getOrdersByDate(Instant startDate , Instant endDate, int page, int size) {
-        Pageable pageRequest = PageRequest.of(page , size);
-        return new ResponseEntity<>(orderRepository.findByCreatedAtBetweenOrderByIdDesc(startDate, endDate, pageRequest).get(), HttpStatus.OK);
+    public ResponseEntity<Page<Orders>> getOrdersByDate(Instant startDate ,
+                                                        Instant endDate ,
+                                                        int page ,
+                                                        int size) {
+        Pageable pageRequest = PageRequest
+                .of(page , size);
+        String username = userAuthProvider
+                .getCurrentUserUsername();
+        Optional<Page<Orders>> orders = orderRepository
+                .findBySellerUsernameAndCreatedAtBetweenOrderByIdDesc(username , startDate , endDate , pageRequest);
+        return orders
+                .map(ordersPage -> new ResponseEntity<>(ordersPage , HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(null , HttpStatus.NO_CONTENT));
     }
+
+    public ResponseEntity<Page<Orders>> getOrdersById(Long id ,
+                                                      int page ,
+                                                      int size) {
+
+        String username = userAuthProvider.getCurrentUserUsername();
+
+        Pageable pageRequest = PageRequest.of(page , size);
+        Optional<Page<Orders>> orders = orderRepository
+                .findByIdAndSellerUsernameOrderByIdDesc(id , username , pageRequest);
+        return orders
+                .map(ordersPage -> new ResponseEntity<>(ordersPage , HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(null , HttpStatus.NO_CONTENT));
+    }
+
+    public ResponseEntity<Page<Orders>> getOrdersByContactNumber(String contactNo ,
+                                                                 int page ,
+                                                                 int size) {
+
+        String username = userAuthProvider.getCurrentUserUsername();
+        Pageable pageRequest = PageRequest.of(page , size);
+        Customer customer = customerRepository
+                .findByContactNo(Long.valueOf(contactNo))
+                .orElseGet(Customer::new);
+        Optional<Page<Orders>> orders = orderRepository
+                .findAllByCustomerAndSellerUsernameOrderByIdDesc(customer , username , pageRequest);
+        return orders
+                .map(ordersPage -> new ResponseEntity<>(ordersPage , HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(null , HttpStatus.NO_CONTENT));
+    }
+
+
 }

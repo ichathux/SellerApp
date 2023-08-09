@@ -36,18 +36,16 @@ public class ListingController {
 
     @GetMapping("files")
     private ResponseEntity<Page<ListingFileUpload>> getAllFiles(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token ,
             @RequestParam(name = "page") int page ,
             @RequestParam(name = "size") int size) {
-        return listingService.getUploadedFiles(page , size , token);
+        return listingService.getUploadedFiles(page , size);
     }
 
     @GetMapping("orders")
     private ResponseEntity<Page<Orders>> getAllOrders(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token ,
             @RequestParam(name = "page") int page ,
             @RequestParam(name = "size") int size) {
-        return listingService.getListedOrders(page , size , token);
+        return listingService.getListedOrders(page , size);
     }
 
     @PostMapping("singleInput")
@@ -68,7 +66,7 @@ public class ListingController {
     @GetMapping("getBulkInputList")
     private ResponseEntity<List<BulkInputDto>> getBulkInputList(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        return listingService.getBulkInputList(token);
+        return listingService.getBulkInputList();
     }
 
     @GetMapping("searchByDate")
@@ -79,5 +77,21 @@ public class ListingController {
             @RequestParam("size") int size){
         log.info("start date - "+startDate+ " "+"end date - "+endDate);
         return listingService.getOrdersByDate(startDate, endDate, page, size);
+    }
+
+    @GetMapping("searchById")
+    private ResponseEntity<Page<Orders>> getOrdersById(
+            @RequestParam("orderId") Long id,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size){
+        return listingService.getOrdersById(id , page, size);
+    }
+
+    @GetMapping("searchByContactNo")
+    private ResponseEntity<Page<Orders>> getOrdersByContactNo(
+            @RequestParam("contactNo") String contactNo,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size){
+        return listingService.getOrdersByContactNumber(contactNo , page, size);
     }
 }

@@ -1,7 +1,7 @@
 package com.example.demo.repository;
 
+import com.example.demo.model.Customer;
 import com.example.demo.model.Orders;
-import com.example.demo.model.SellerDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
@@ -12,6 +12,11 @@ import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends CrudRepository<Orders, Long> {
-    Optional<Page<Orders>> findAllBySellerDetailsOrderByIdDesc(SellerDetails sellerDetails, Pageable pageable);
-    Optional<Page<Orders>> findByCreatedAtBetweenOrderByIdDesc(Instant startDate, Instant endDate, Pageable pageable);
+    Optional<Page<Orders>> findAllBySellerUsernameOrderByIdDesc(String sellerUsername, Pageable pageable);
+    Optional<Page<Orders>> findBySellerUsernameAndCreatedAtBetweenOrderByIdDesc(String sellerUsername, Instant startDate, Instant endDate, Pageable pageable);
+    Optional<Page<Orders>> findByIdAndSellerUsernameOrderByIdDesc(Long id, String sellerUsername, Pageable pageable);
+
+    Optional<Page<Orders>> findAllByCustomerAndSellerUsernameOrderByIdDesc(Customer customer ,
+                                                                           String sellerUsername,
+                                                                           Pageable pageRequest);
 }

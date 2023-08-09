@@ -24,9 +24,10 @@ public class Orders {
     private Double price;
     private Double deliveryCharge;
     private String remarks;
-    @ManyToOne
-    @JoinColumn(name = "seller_id", referencedColumnName = "contactNo")
-    private SellerDetails sellerDetails;
+//    @ManyToOne
+//    @JoinColumn(name = "seller_id", referencedColumnName = "contactNo")
+//    private SellerDetails sellerDetails;
+    private String sellerUsername;
     private Status status;
     private Instant createdAt;
     private Instant packedAt;
