@@ -9,7 +9,9 @@ public enum Status {
     ORDER_PLACED("Order placed"),
     PACKED("Packed"),
     COLLECTED_DELIVERY_PARTNER("Collected by delivery partner"),
-    COMPLETE("Complete");
+    COMPLETE("Complete"),
+    OUT_OF_STOCK("Out of stock"),
+    IN_STOCK("In stock");
 
     Status(String name) {
     }

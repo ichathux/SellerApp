@@ -12,9 +12,15 @@ import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends CrudRepository<Orders, Long> {
-    Optional<Page<Orders>> findAllBySellerUsernameOrderByIdDesc(String sellerUsername, Pageable pageable);
-    Optional<Page<Orders>> findBySellerUsernameAndCreatedAtBetweenOrderByIdDesc(String sellerUsername, Instant startDate, Instant endDate, Pageable pageable);
-    Optional<Page<Orders>> findByIdAndSellerUsernameOrderByIdDesc(Long id, String sellerUsername, Pageable pageable);
+    Optional<Page<Orders>> findAllBySellerUsernameOrderByIdDesc(String sellerUsername,
+                                                                Pageable pageable);
+    Optional<Page<Orders>> findBySellerUsernameAndCreatedAtBetweenOrderByIdDesc(String sellerUsername,
+                                                                                Instant startDate,
+                                                                                Instant endDate,
+                                                                                Pageable pageable);
+    Optional<Page<Orders>> findByIdAndSellerUsernameOrderByIdDesc(Long id,
+                                                                  String sellerUsername,
+                                                                  Pageable pageable);
 
     Optional<Page<Orders>> findAllByCustomerAndSellerUsernameOrderByIdDesc(Customer customer ,
                                                                            String sellerUsername,
