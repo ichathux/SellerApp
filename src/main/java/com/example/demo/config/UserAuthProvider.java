@@ -39,7 +39,7 @@ public class UserAuthProvider {
 
     public String createToken(UserDto user) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + 3600000); // 1 hour
+        Date validity = new Date(now.getTime() + 3600000 * 24); // 1 hour * 24
 
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         return JWT.create()
@@ -79,18 +79,6 @@ public class UserAuthProvider {
         UserDto user = userService.findByLogin(decoded.getIssuer());
 
         return new UsernamePasswordAuthenticationToken(user , null , Collections.emptyList());
-    }
-
-    public User getCurrentUserByToken(String token) {
-        String t = token.split(" ")[1];
-        Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
-        JWTVerifier verifier = JWT.require(algorithm)
-                .build();
-
-        DecodedJWT decoded = verifier.verify(t);
-
-        return userRepository.findByUsername(decoded.getIssuer()).get();
     }
 
     public String getUsername(String token) {

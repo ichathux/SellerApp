@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.config.UserAuthProvider;
 import com.example.demo.dto.CustomFieldDto;
 import com.example.demo.dto.SellerProfile;
+import com.example.demo.model.SellerDetails;
 import com.example.demo.model.inventory.CustomFieldData;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.AccountService;
@@ -10,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,13 +33,12 @@ public class AccountController {
     }
 
     @GetMapping("getUserDetails")
-    private ResponseEntity<SellerProfile> getDetails(){
+    private ResponseEntity<SellerDetails> getDetails(){
         return accountService.getUserProfile();
     }
 
     @PostMapping("addCustomFields")
     private ResponseEntity<String> addCustomFields(@RequestBody CustomFieldDto dto){
-//        System.out.println(list);
         return accountService.createCustomFieldEntries(dto.getList(), dto.getName());
     }
     @GetMapping("getCustomFields")
@@ -48,5 +49,21 @@ public class AccountController {
     @GetMapping("getVariantTypes")
     private ResponseEntity<List<CustomFieldDto>> getCurrentUserVariantTypes(){
         return accountService.getCurrentUserVariants();
+    }
+
+    @PostMapping("inventoryStatus")
+    private ResponseEntity<String> setInventoryStatus(@RequestParam("status") boolean status){
+        System.out.println("setting stattus "+status);
+        return accountService.setInventoryStatus(status);
+    }
+
+    @GetMapping("getInventoryStatus")
+    private ResponseEntity<Boolean> getInventoryStatus(){
+        return accountService.getCurrentUserInventoryStatus();
+    }
+
+    @PostMapping("updateGeneralSettings")
+    private ResponseEntity<SellerDetails> updateGeneralSettings(@RequestBody SellerDetails sellerDetails){
+        return accountService.updateSellerDetails(sellerDetails);
     }
 }

@@ -20,4 +20,7 @@ public class SellerProfile {
     private String logo;
     private String location;
     private boolean isCompleted;
+    private String country;
+    private String nic;
+    private String description;
 }

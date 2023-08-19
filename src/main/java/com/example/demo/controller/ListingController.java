@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.config.UserAuthProvider;
 import com.example.demo.dto.BulkInputDto;
 import com.example.demo.model.ListingFileUpload;
 import com.example.demo.model.Orders;
@@ -24,14 +25,14 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 public class ListingController {
 
     private final ListingService listingService;
+    private final UserAuthProvider userAuthProvider;
 
     @PostMapping(value = "bulkUpload",
             consumes = MULTIPART_FORM_DATA_VALUE)
     private ResponseEntity<String> uploadBulkListing(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token ,
             @RequestPart("file") MultipartFile file) {
-        log.info("file received " + token);
-        return listingService.uploadBulkListing(file , token);
+        log.info("bulkUpload, " +userAuthProvider.getCurrentUserUsername());
+        return listingService.uploadBulkListing(file);
     }
 
     @GetMapping("files")
@@ -52,7 +53,7 @@ public class ListingController {
     private ResponseEntity<String> singleInput(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token ,
             @RequestBody Orders orders) {
-        return listingService.addSingleOrder(token , orders);
+        return listingService.addSingleOrder(orders);
     }
 
     @PostMapping("createBulkUploadFile")

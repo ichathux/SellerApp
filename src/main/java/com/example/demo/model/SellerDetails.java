@@ -15,12 +15,19 @@ import javax.persistence.*;
 public class SellerDetails {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private Long contactNo;
     private String username;
     private String ownerName;
     private String displayName;
     private String address;
-    private String logo;
+    private String logo = "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3.webp";
     private String location;
     private boolean isCompleted = false;
+    private boolean inventory = false;
+    private String country;
+    private String city;
+    private String description;
+    private String nic;
 }

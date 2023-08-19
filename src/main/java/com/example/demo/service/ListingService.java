@@ -43,10 +43,11 @@ public class ListingService {
     private final SellerDetailsRepository sellerDetailsRepository;
     private final UserAuthProvider userAuthProvider;
     private final HashMap<String, BulkInputDto> listHashMap;
+    private final ApplicationParamService applicationParamService;
 
-    public ResponseEntity<String> uploadBulkListing(MultipartFile file , String token) {
+    public ResponseEntity<String> uploadBulkListing(MultipartFile file) {
         log.info("handling request parts " + file.getOriginalFilename());
-        String savingPath = "/etc/seller-app/uploads/bulk-listing/bulk_upload_file";
+        String savingPath = applicationParamService.getUploadBulkOrdersSavingPath();
         String folderName = Instant.now().toString();
         try {
             File f = new ClassPathResource("").getFile();
@@ -237,13 +238,10 @@ public class ListingService {
     }
 
 
-    public ResponseEntity<String> addSingleOrder(String token ,
-                                                 Orders orders) {
+    public ResponseEntity<String> addSingleOrder(Orders orders) {
 
         try {
             orders = checkCustomer(orders);
-            orders = checkSellerDetails(token , orders);
-
             orders.setCreatedAt(Instant.now());
             orders.setUpdatedAt(Instant.now());
             orderRepository.save(orders);

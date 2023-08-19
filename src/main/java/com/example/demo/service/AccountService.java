@@ -24,36 +24,14 @@ public class AccountService {
     private final CustomFieldRepository customFieldRepository;
     private final UserAuthProvider userAuthProvider;
     private final SellerDetailsRepository sellerDetailsRepository;
-    private final UserDetailsMapper userDetailsMapper;
-//    public void completeAccount(SellerProfile sellerProfile){
-//
-//        User currentUser = authService.getCurrentUser();
-//        SellerDetails sellerDetails = sellerDetailsRepository
-//                .findByUser(currentUser).orElseThrow(()-> new SpringException("No such a user"));
-//
-//        sellerDetails.setAddress(sellerProfile.getAddress());
-//        sellerDetails.setUser(authService.getCurrentUser());
-////        sellerDetails.setLogo(sellerProfile.getLogo());
-//        sellerDetails.setLocation(sellerProfile.getLocation());
-//        sellerDetails.setContactNo(Long.valueOf(sellerProfile.getContactNo()));
-//        sellerDetails.setDisplayName(sellerProfile.getBusinessName());
-////        sellerDetails.setBusinessType(sellerProfile.getBusinessType());
-//        sellerDetails.setCompleted(true);
-//
-//        sellerDetailsRepository.save(sellerDetails);
-//
-//    }
 
-    public ResponseEntity<SellerProfile> getUserProfile() {
+
+    public ResponseEntity<SellerDetails> getUserProfile() {
         Optional<SellerDetails> sellerDetails = sellerDetailsRepository
                 .findByUsername(userAuthProvider.getCurrentUserUsername());
-
-//        System.out.println("mapping results " + );
-        SellerProfile sellerProfile = userDetailsMapper.toSellerProfile(sellerDetails.get());
-
         return sellerDetails
-                .map(details -> new ResponseEntity<>(userDetailsMapper.toSellerProfile(details) , HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(new SellerProfile() , HttpStatus.NOT_FOUND));
+                .map(details -> new ResponseEntity<>(sellerDetails.get() , HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(null , HttpStatus.NOT_FOUND));
 
     }
 
@@ -174,5 +152,28 @@ public class AccountService {
             return new ResponseEntity<>(returnList, HttpStatus.OK);
         }
         return new ResponseEntity<>(null,HttpStatus.NO_CONTENT);
+    }
+
+    public ResponseEntity<String> setInventoryStatus(boolean status) {
+        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(userAuthProvider.getCurrentUserUsername());
+        if (sellerDetails.isPresent()){
+            sellerDetails.get().setInventory(status);
+            sellerDetailsRepository.save(sellerDetails.get());
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    public ResponseEntity<Boolean> getCurrentUserInventoryStatus() {
+        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(userAuthProvider.getCurrentUserUsername());
+        if (sellerDetails.isPresent()){
+            return new ResponseEntity<>(sellerDetails.get().isInventory(),HttpStatus.OK);
+        }
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+    }
+
+    public ResponseEntity<SellerDetails> updateSellerDetails(SellerDetails sellerDetails) {
+        System.out.println(sellerDetails);
+        return new ResponseEntity<>(sellerDetailsRepository.save(sellerDetails), HttpStatus.OK);
     }
 }

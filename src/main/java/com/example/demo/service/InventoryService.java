@@ -1,7 +1,9 @@
 package com.example.demo.service;
 
 import com.example.demo.config.UserAuthProvider;
+import com.example.demo.dto.CustomFieldResponseDto;
 import com.example.demo.dto.InventoryDto;
+import com.example.demo.dto.InventoryResponseDto;
 import com.example.demo.enums.Status;
 import com.example.demo.exception.SpringException;
 import com.example.demo.model.inventory.*;
@@ -10,8 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -24,11 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -42,9 +40,10 @@ public class InventoryService {
     private final BrandRepository brandRepository;
     private final UserAuthProvider userAuthProvider;
 
+    private final ApplicationParamService applicationParamService;
     public ResponseEntity<String> addSingleItemToInventory(InventoryDto inventoryDto) {
         String username = userAuthProvider.getCurrentUserUsername();
-        log.info(username+", addSingleItemToInventory, "+inventoryDto);
+        log.info(username + ", addSingleItemToInventory, " + inventoryDto);
         Inventory inventory = new Inventory();
         Optional<Brand> brand = brandRepository.findByName(inventoryDto.getBrand());
         if (brand.isPresent()) {
@@ -80,7 +79,8 @@ public class InventoryService {
                 .findByUsernameAndVariantType(username , inventoryDto.getVariantType().trim())
                 .orElseThrow(() -> new SpringException("Custom field not found")));
 
-        String savingPath = "/etc/seller-app/uploads/catalog/images";
+        String savingPath = applicationParamService.getUploadInventoryImagesSavingPath();
+        String imgPath = applicationParamService.getUploadInventoryImagesRetrievingPath();
         String fileName = Instant.now().getEpochSecond() + "." + getFileExtension(inventoryDto.getFile());
 
         try {
@@ -95,12 +95,12 @@ public class InventoryService {
             Files.copy(inventoryDto.getFile().getInputStream() , filePath , StandardCopyOption.REPLACE_EXISTING);
 
             inventory.setFileName(fileName);
-            inventory.setFileLocation(savingPath);
+            inventory.setFileLocation(imgPath);
             inventoryRepository.save(inventory);
             return new ResponseEntity<>("done" , HttpStatus.OK);
 
         } catch (IOException e) {
-            log.error(username+", error occurred, addSingleItemToInventory, "+e.getMessage());
+            log.error(username + ", error occurred, addSingleItemToInventory, " + e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -108,8 +108,8 @@ public class InventoryService {
 
     public String getFileExtension(MultipartFile file) {
         String username = userAuthProvider.getCurrentUserUsername();
-        try{
-            log.info(username+", getFileExtension");
+        try {
+            log.info(username + ", getFileExtension");
             String originalFilename = file.getOriginalFilename();
             if (originalFilename != null && !originalFilename.isEmpty()) {
                 int dotIndex = originalFilename.lastIndexOf('.');
@@ -117,8 +117,8 @@ public class InventoryService {
                     return originalFilename.substring(dotIndex + 1).toLowerCase();
                 }
             }
-        }catch (Exception e){
-            log.error(username+", error occurred, getFileExtension, "+e.getMessage());
+        } catch (Exception e) {
+            log.error(username + ", error occurred, getFileExtension, " + e.getMessage());
         }
 
         return null;
@@ -136,32 +136,99 @@ public class InventoryService {
                 .orElseGet(() -> new ResponseEntity<>(null , HttpStatus.NO_CONTENT));
     }
 
+
     public ResponseEntity<Iterable<Brand>> getAllBrands() {
         return new ResponseEntity<>(brandRepository.findAll() , HttpStatus.OK);
     }
 
-    public ResponseEntity<Page<Inventory>> getAllItems(int page , int size) {
-
-        Pageable pageRequest = PageRequest
-                .of(page , size);
-        Optional<Page<Inventory>> itemInventory = inventoryRepository
-                .findAllBySellerUsernameOrderByIdDesc(userAuthProvider.getCurrentUserUsername() , pageRequest);
-        return itemInventory
-                .map(listingFileUploads -> new ResponseEntity<>(listingFileUploads , HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(null , HttpStatus.NO_CONTENT));
+    public ResponseEntity<Page<InventoryResponseDto>> getAllItems(int page , int size) {
+        return mappingCustomFieldsToVariants(page , size);
     }
 
-//    private ResponseEntity<Page<Inventory>> mappingCustomFieldsToVariants(int page , int size){
-//        Pageable pageRequest = PageRequest
-//                .of(page , size);
-//        Optional<Page<Inventory>> itemInventory = inventoryRepository
-//                .findAllBySellerUsernameOrderByIdDesc(userAuthProvider.getCurrentUserUsername() , pageRequest);
-//        if (itemInventory.isPresent()){
-////            int customFieldsSize = itemInventory.get().get().collect(Collectors.toList());
-//        }
-//
-//
-//    }
+    public ResponseEntity<Page<InventoryResponseDto>> mappingCustomFieldsToVariants(int page , int size) {
+        Optional<Page<Inventory>> itemInventory = inventoryRepository
+                .findAllBySellerUsernameOrderByIdDesc(
+                        userAuthProvider.getCurrentUserUsername() ,
+                        PageRequest
+                                .of(page , size));
+        List<InventoryResponseDto> returnResponseList = new ArrayList<>();
+
+        if (itemInventory.isPresent()) {
+            List<Inventory> list = itemInventory.get().getContent();
+
+            for (Inventory inventory : list) {
+                CustomFieldData customFieldData = inventory.getCustomFieldData();
+                int customFieldsSize = customFieldData.getFieldsUsed();
+                List<CustomFieldResponseDto> customFieldResponseDtos = new ArrayList<>();
+                var inventoryResponse = new InventoryResponseDto();
+                for (int i = 0; i < customFieldsSize; i++) {
+                    var customFieldResponseDto = new CustomFieldResponseDto();
+
+                    switch (i) {
+                        case 0:
+                            customFieldResponseDto = new CustomFieldResponseDto(
+                                    customFieldData.getCustomField1() ,
+                                    inventory.getCustomField1() ,
+                                    inventory.getCustomField1Price());
+
+                            break;
+                        case 1:
+                            customFieldResponseDto = new CustomFieldResponseDto(
+                                    customFieldData.getCustomField2() ,
+                                    inventory.getCustomField2() ,
+                                    inventory.getCustomField2Price());
+                            break;
+                        case 2:
+                            customFieldResponseDto = new CustomFieldResponseDto(
+                                    customFieldData.getCustomField3() ,
+                                    inventory.getCustomField3() ,
+                                    inventory.getCustomField3Price());
+                            break;
+                        case 3:
+                            customFieldResponseDto = new CustomFieldResponseDto(
+                                    customFieldData.getCustomField4() ,
+                                    inventory.getCustomField4() ,
+                                    inventory.getCustomField4Price());
+                            break;
+                        case 4:
+                            customFieldResponseDto = new CustomFieldResponseDto(
+                                    customFieldData.getCustomField5() ,
+                                    inventory.getCustomField5() ,
+                                    inventory.getCustomField5Price());
+                            break;
+                        case 5:
+                            customFieldResponseDto = new CustomFieldResponseDto(
+                                    customFieldData.getCustomField6() ,
+                                    inventory.getCustomField6() ,
+                                    inventory.getCustomField6Price());
+                            break;
+
+                    }
+                    if (customFieldResponseDto.getQty() > 0){
+                        customFieldResponseDtos.add(customFieldResponseDto);
+                    }
+                }
+
+                inventoryResponse.setVariants(customFieldResponseDtos);
+                inventoryResponse.setName(inventory.getName());
+                inventoryResponse.setBrand(inventory.getBrand().getName());
+                inventoryResponse.setSubCategoryId(inventory.getSubCategory());
+                inventoryResponse.setCreatedAt(inventory.getCreatedAt());
+                inventoryResponse.setImage(inventory.getFileLocation()+"/"+userAuthProvider.getCurrentUserUsername() + "/"+inventory.getFileName());
+                returnResponseList.add(inventoryResponse);
+            }
+
+            int totalPages = itemInventory.get().getTotalPages() * itemInventory.get().getSize();
+            return new ResponseEntity<>(new PageImpl<>(
+                    returnResponseList ,
+                    itemInventory.get().getPageable() ,
+                    totalPages) ,
+                    HttpStatus.OK);
+
+        }
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+
+    }
 
 
 }

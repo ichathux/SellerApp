@@ -9,29 +9,19 @@ import com.example.demo.mappers.UserMapper;
 import com.example.demo.model.NotificationEmail;
 import com.example.demo.model.SellerDetails;
 import com.example.demo.model.User;
-import com.example.demo.model.VerificationToken;
 import com.example.demo.repository.SellerDetailsRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.VerificationTokenRepository;
-//import com.example.demo.security.JwtTokenService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.CharBuffer;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -40,11 +30,9 @@ public class AuthService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
-    private final VerificationTokenRepository verificationTokenRepository;
     private final SellerDetailsRepository sellerDetailsRepository;
-    private final MailService mailService;
     private final UserMapper userMapper;
-//    private final UserAuthProvider userAuthProvider;
+    private final ApplicationParamService applicationParamService;
 
     public ResponseEntity<UserDto> login(CredentialDto credentialsDto) {
         User user = userRepository.findByUsername(credentialsDto.getUsername())
@@ -58,6 +46,7 @@ public class AuthService {
 
     public UserDto register(SignUpDto userDto) {
 
+        System.out.println(userDto);
         Optional<User> optionalUser = userRepository.findByUsername(userDto.getUsername());
         if (optionalUser.isPresent()) {
             throw new AppException("Login already exists", HttpStatus.CONFLICT);
@@ -73,9 +62,11 @@ public class AuthService {
         sellerDetails.setUsername(savedUser.getUsername());
         sellerDetails.setOwnerName(userDto.getFirstName()+" "+userDto.getLastName());
         sellerDetails.setContactNo(Long.valueOf(userDto.getContact()));
-        sellerDetails.setAddress(userDto.getAddress());
+        sellerDetails.setCity(userDto.getAddress());
         sellerDetails.setDisplayName(userDto.getBusinessName());
         sellerDetails.setCompleted(true);
+        sellerDetails.setLogo(applicationParamService.getDefaultLogoUrl());
+
 
         sellerDetailsRepository.save(sellerDetails);
         return userMapper.toUserDto(savedUser);

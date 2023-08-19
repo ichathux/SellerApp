@@ -21,9 +21,6 @@ public class InventoryDto {
     private String name;
     private Long subCategoryId;
     private String brand;
-//    private String serialNumber;
-//    private int quantity;
-//    private double unitPrice;
     private String itemDescription;
     private MultipartFile file;
     private Long customField1 = 0L;

@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.InventoryDto;
+import com.example.demo.dto.InventoryResponseDto;
 import com.example.demo.model.ListingFileUpload;
 import com.example.demo.model.inventory.Brand;
 import com.example.demo.model.inventory.Category;
@@ -13,10 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.Map;
-
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
@@ -70,10 +67,12 @@ public class InventoryController {
     }
 
     @GetMapping("getAllItems")
-    private ResponseEntity<Page<Inventory>> getAllItems(
+    private ResponseEntity<Page<InventoryResponseDto>> getAllItems(
             @RequestParam("page") int page ,
             @RequestParam("size") int size) {
-        return inventoryService.getAllItems(page,size);
+
+
+        return inventoryService.mappingCustomFieldsToVariants(page,size);
     }
 
     @GetMapping("getCategories")
