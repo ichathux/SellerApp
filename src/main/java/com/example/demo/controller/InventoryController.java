@@ -90,5 +90,8 @@ public class InventoryController {
         return inventoryService.getAllBrands();
     }
 
-
+    @DeleteMapping("deleteInventoryItem")
+    private ResponseEntity<String> deleteInventoryItem(@RequestParam("id") Long id){
+        return inventoryService.deleteInventoryItem(id);
+    }
 }

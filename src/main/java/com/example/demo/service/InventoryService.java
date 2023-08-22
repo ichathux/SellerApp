@@ -194,4 +194,14 @@ public class InventoryService {
     }
 
 
+    public ResponseEntity<String> deleteInventoryItem(Long id) {
+        log.info(userAuthProvider.getCurrentUserUsername()+", delete inventory item, "+id);
+        try {
+            inventoryRepository.deleteById(id);
+            return new ResponseEntity<>("done", HttpStatus.OK);
+        }catch (Exception e){
+            log.error(userAuthProvider.getCurrentUserUsername()+", error occurred while deleting inventory, "+id);
+            return new ResponseEntity<>("error", HttpStatus.NOT_FOUND);
+        }
+    }
 }
