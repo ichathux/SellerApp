@@ -10,6 +10,7 @@ import com.example.demo.model.inventory.*;
 import com.example.demo.repository.inventory.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -41,6 +42,7 @@ public class InventoryService {
     private final UserAuthProvider userAuthProvider;
 
     private final ApplicationParamService applicationParamService;
+
     public ResponseEntity<String> addSingleItemToInventory(InventoryDto inventoryDto) {
         String username = userAuthProvider.getCurrentUserUsername();
         log.info(username + ", addSingleItemToInventory, " + inventoryDto);
@@ -79,49 +81,10 @@ public class InventoryService {
                 .findByUsernameAndVariantType(username , inventoryDto.getVariantType().trim())
                 .orElseThrow(() -> new SpringException("Custom field not found")));
 
-        String savingPath = applicationParamService.getUploadInventoryImagesSavingPath();
-        String imgPath = applicationParamService.getUploadInventoryImagesRetrievingPath();
-        String fileName = Instant.now().getEpochSecond() + "." + getFileExtension(inventoryDto.getFile());
+        inventory.setImgUrl(inventoryDto.getImgUrl());
+        inventoryRepository.save(inventory);
+        return new ResponseEntity<>("done" , HttpStatus.OK);
 
-        try {
-            File f = new ClassPathResource("").getFile();
-            final Path path = Paths.get(savingPath + File.separator + username);
-
-            if (!Files.exists(path)) {
-                Files.createDirectories(path);
-            }
-
-            Path filePath = path.resolve(Objects.requireNonNull(fileName));
-            Files.copy(inventoryDto.getFile().getInputStream() , filePath , StandardCopyOption.REPLACE_EXISTING);
-
-            inventory.setFileName(fileName);
-            inventory.setFileLocation(imgPath);
-            inventoryRepository.save(inventory);
-            return new ResponseEntity<>("done" , HttpStatus.OK);
-
-        } catch (IOException e) {
-            log.error(username + ", error occurred, addSingleItemToInventory, " + e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-    }
-
-    public String getFileExtension(MultipartFile file) {
-        String username = userAuthProvider.getCurrentUserUsername();
-        try {
-            log.info(username + ", getFileExtension");
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename != null && !originalFilename.isEmpty()) {
-                int dotIndex = originalFilename.lastIndexOf('.');
-                if (dotIndex > 0 && dotIndex < originalFilename.length() - 1) {
-                    return originalFilename.substring(dotIndex + 1).toLowerCase();
-                }
-            }
-        } catch (Exception e) {
-            log.error(username + ", error occurred, getFileExtension, " + e.getMessage());
-        }
-
-        return null;
     }
 
     public ResponseEntity<Iterable<Category>> getCategories() {
@@ -204,7 +167,7 @@ public class InventoryService {
                             break;
 
                     }
-                    if (customFieldResponseDto.getQty() > 0){
+                    if (customFieldResponseDto.getQty() > 0) {
                         customFieldResponseDtos.add(customFieldResponseDto);
                     }
                 }
@@ -214,7 +177,7 @@ public class InventoryService {
                 inventoryResponse.setBrand(inventory.getBrand().getName());
                 inventoryResponse.setSubCategoryId(inventory.getSubCategory());
                 inventoryResponse.setCreatedAt(inventory.getCreatedAt());
-                inventoryResponse.setImage(inventory.getFileLocation()+"/"+userAuthProvider.getCurrentUserUsername() + "/"+inventory.getFileName());
+                inventoryResponse.setImage(inventory.getImgUrl());
                 returnResponseList.add(inventoryResponse);
             }
 
@@ -226,7 +189,7 @@ public class InventoryService {
                     HttpStatus.OK);
 
         }
-        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(null , HttpStatus.NO_CONTENT);
 
     }
 

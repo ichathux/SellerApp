@@ -1,0 +1,19 @@
+#use for running mysql and spring app run in same container
+
+#version: '3'
+#services:
+#  mysql:
+#    image: my-mysql-image:latest
+#    environment:
+#      MYSQL_ROOT_PASSWORD: AlfaTeck@123
+#      MYSQL_DATABASE: Test_one
+#  spring-boot-app:
+#    build: .
+#    depends_on:
+#      - mysql
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/Test_one
+#      SPRING_DATASOURCE_USERNAME: root
+#      SPRING_DATASOURCE_PASSWORD: AlfaTeck@123

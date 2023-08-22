@@ -23,13 +23,10 @@ public class InventoryController {
     private final InventoryService inventoryService;
     private final AccountService accountService;
 
-    @PostMapping(value = "addSingleItem", consumes = MULTIPART_FORM_DATA_VALUE)
-    private ResponseEntity<String> addSingleItems(@RequestPart("file") MultipartFile file ,
-                                                  @RequestParam("name") String name ,
+    @PostMapping(value = "addSingleItem")
+    private ResponseEntity<String> addSingleItems(@RequestParam("name") String name ,
                                                   @RequestParam("subCategoryId") Long subCategoryId ,
                                                   @RequestParam("brand") String brand ,
-//                                                  @RequestParam("quantity") Integer quantity ,
-//                                                  @RequestParam("unitPrice") double unitPrice ,
                                                   @RequestParam("itemDescription") String itemDescription,
                                                   @RequestParam("customField1") Long customField1,
                                                   @RequestParam("customField1Price") Double customField1Price,
@@ -43,14 +40,14 @@ public class InventoryController {
                                                   @RequestParam("customField5Price") Double customField5Price,
                                                   @RequestParam("customField6") Long customField6,
                                                   @RequestParam("customField6Price") Double customField6Price,
-                                                  @RequestParam("variantType") String variantType) {
+                                                  @RequestParam("variantType") String variantType,
+                                                  @RequestParam("imgUrl") String imgUrl) {
 
         return inventoryService.addSingleItemToInventory(
                 new InventoryDto(name ,
                         subCategoryId ,
                         brand ,
                         itemDescription ,
-                        file,
                         Long.valueOf(customField1),
                         Double.valueOf(customField1Price),
                         Long.valueOf(customField2),
@@ -63,7 +60,8 @@ public class InventoryController {
                         Double.valueOf(customField5Price),
                         Long.valueOf(customField6),
                         Double.valueOf(customField6Price),
-                        variantType));
+                        variantType,
+                        imgUrl));
     }
 
     @GetMapping("getAllItems")

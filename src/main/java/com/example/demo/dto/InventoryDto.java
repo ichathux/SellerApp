@@ -22,7 +22,7 @@ public class InventoryDto {
     private Long subCategoryId;
     private String brand;
     private String itemDescription;
-    private MultipartFile file;
+    //    private MultipartFile file;
     private Long customField1 = 0L;
     private Double customField1Price = 0D;
     private Long customField2 = 0L;
@@ -36,4 +36,5 @@ public class InventoryDto {
     private Long customField6 = 0L;
     private Double customField6Price = 0D;
     private String variantType;
+    private String imgUrl;
 }

@@ -26,7 +26,7 @@ public class Inventory {
     @JoinColumn(name = "Brand_id", referencedColumnName = "id")
     private Brand brand;
     private String serialNumber;
-//    private int quantity;
+    //    private int quantity;
 //    private double unitPrice;
     private String itemDescription;
     private String fileName;
@@ -50,4 +50,5 @@ public class Inventory {
     private Double customField6Price = 0D;
     @ManyToOne
     private CustomFieldData customFieldData;
+    private String imgUrl;
 }
