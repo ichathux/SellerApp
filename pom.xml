@@ -49,11 +49,6 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.mapstruct</groupId>
 			<artifactId>mapstruct</artifactId>
 			<version>1.5.2.Final</version>
@@ -91,32 +86,11 @@
 			<artifactId>okhttp</artifactId>
 			<version>4.9.1</version> <!-- Use the latest version -->
 		</dependency>
-
-<!--		<dependency>-->
-<!--			<groupId>org.apache.poi</groupId>-->
-<!--			<artifactId>poi-ooxml</artifactId>-->
-<!--			<version>5.2.0</version>-->
-<!--		</dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>org.jxls</groupId>-->
-<!--			<artifactId>jxls-jexcel</artifactId>-->
-<!--			<version>1.0.9</version>-->
-<!--		</dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>org.dhatim</groupId>-->
-<!--			<artifactId>fastexcel-reader</artifactId>-->
-<!--			<version>0.15.3</version>-->
-<!--		</dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>org.dhatim</groupId>-->
-<!--			<artifactId>fastexcel</artifactId>-->
-<!--			<version>0.15.3</version>-->
-<!--		</dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>org.mapstruct</groupId>-->
-<!--			<artifactId>mapstruct</artifactId>-->
-<!--			<version>1.5.2.Final</version>-->
-<!--		</dependency>-->
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http44</artifactId>
+			<version>1.30.0</version> <!-- Use the latest version -->
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>seller-app</finalName>

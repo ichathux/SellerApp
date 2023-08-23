@@ -2,6 +2,7 @@ package com.example.demo.dto;
 
 import com.example.demo.enums.BusinessType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import javax.persistence.Id;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 public class SellerProfile {
     private Long id;
     private Long contactNo;

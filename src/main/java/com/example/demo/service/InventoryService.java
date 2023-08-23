@@ -35,13 +35,11 @@ import java.util.*;
 public class InventoryService {
     private final CustomFieldRepository customFieldRepository;
     private final InventoryRepository inventoryRepository;
-
     private final CategoryRepository categoryRepository;
     private final SubCategoryRepository subCategoryRepository;
     private final BrandRepository brandRepository;
     private final UserAuthProvider userAuthProvider;
-
-    private final ApplicationParamService applicationParamService;
+    private final CloudinaryService cloudinaryService;
 
     public ResponseEntity<String> addSingleItemToInventory(InventoryDto inventoryDto) {
         String username = userAuthProvider.getCurrentUserUsername();
@@ -80,7 +78,7 @@ public class InventoryService {
         inventory.setCustomFieldData(customFieldRepository
                 .findByUsernameAndVariantType(username , inventoryDto.getVariantType().trim())
                 .orElseThrow(() -> new SpringException("Custom field not found")));
-
+        inventory.setDltUrl(inventoryDto.getDltUrl());
         inventory.setImgUrl(inventoryDto.getImgUrl());
         inventoryRepository.save(inventory);
         return new ResponseEntity<>("done" , HttpStatus.OK);
@@ -172,6 +170,7 @@ public class InventoryService {
                     }
                 }
 
+                inventoryResponse.setId(inventory.getId());
                 inventoryResponse.setVariants(customFieldResponseDtos);
                 inventoryResponse.setName(inventory.getName());
                 inventoryResponse.setBrand(inventory.getBrand().getName());
@@ -195,13 +194,21 @@ public class InventoryService {
 
 
     public ResponseEntity<String> deleteInventoryItem(Long id) {
-        log.info(userAuthProvider.getCurrentUserUsername()+", delete inventory item, "+id);
+        log.info(userAuthProvider.getCurrentUserUsername() + ", delete inventory item, " + id);
         try {
-            inventoryRepository.deleteById(id);
-            return new ResponseEntity<>("done", HttpStatus.OK);
-        }catch (Exception e){
-            log.error(userAuthProvider.getCurrentUserUsername()+", error occurred while deleting inventory, "+id);
-            return new ResponseEntity<>("error", HttpStatus.NOT_FOUND);
+            Optional<Inventory> inventory = inventoryRepository.findById(id);
+            if (inventory.isPresent()) {
+                if (inventory.get().getDltUrl() != null)
+                    cloudinaryService.removeImg(inventory.get().getDltUrl());
+                inventoryRepository.deleteById(id);
+            }
+
+            return new ResponseEntity<>("done" , HttpStatus.OK);
+        } catch (Exception e) {
+            log.error(userAuthProvider.getCurrentUserUsername() + ", error occurred while deleting inventory, " + id);
+            return new ResponseEntity<>("error" , HttpStatus.NOT_FOUND);
         }
     }
+
+
 }

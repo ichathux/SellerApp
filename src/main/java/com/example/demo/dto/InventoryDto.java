@@ -37,4 +37,5 @@ public class InventoryDto {
     private Double customField6Price = 0D;
     private String variantType;
     private String imgUrl;
+    private String dltUrl;
 }

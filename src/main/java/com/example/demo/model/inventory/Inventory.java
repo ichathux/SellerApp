@@ -26,11 +26,7 @@ public class Inventory {
     @JoinColumn(name = "Brand_id", referencedColumnName = "id")
     private Brand brand;
     private String serialNumber;
-    //    private int quantity;
-//    private double unitPrice;
     private String itemDescription;
-    private String fileName;
-    private String fileLocation;
     private String sellerUsername;
     private Instant createdAt;
     private Instant updatedAt;
@@ -51,4 +47,5 @@ public class Inventory {
     @ManyToOne
     private CustomFieldData customFieldData;
     private String imgUrl;
+    private String dltUrl;
 }

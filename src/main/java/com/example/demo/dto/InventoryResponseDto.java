@@ -15,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class InventoryResponseDto {
 
+    private Long id;
     private String name;
     private SubCategory subCategoryId;
     private String brand;

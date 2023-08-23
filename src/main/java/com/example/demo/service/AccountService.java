@@ -24,7 +24,7 @@ public class AccountService {
     private final CustomFieldRepository customFieldRepository;
     private final UserAuthProvider userAuthProvider;
     private final SellerDetailsRepository sellerDetailsRepository;
-
+    private final CloudinaryService cloudinaryService;
 
     public ResponseEntity<SellerDetails> getUserProfile() {
         Optional<SellerDetails> sellerDetails = sellerDetailsRepository
@@ -174,6 +174,14 @@ public class AccountService {
 
     public ResponseEntity<SellerDetails> updateSellerDetails(SellerDetails sellerDetails) {
         System.out.println(sellerDetails);
+        removeCloudinaryImage(sellerDetails.getLogoPublicIdOld());
         return new ResponseEntity<>(sellerDetailsRepository.save(sellerDetails), HttpStatus.OK);
+    }
+
+    public ResponseEntity<String> removeCloudinaryImage(String publicId){
+        if ( publicId != null){
+            return cloudinaryService.removeImg(publicId);
+        }
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
     }
 }

@@ -23,6 +23,8 @@ public class SellerDetails {
     private String displayName;
     private String address;
     private String logo = "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3.webp";
+    private String logoPublicId;
+    private String logoPublicIdOld;
     private String location;
     private boolean isCompleted = false;
     private boolean inventory = false;
