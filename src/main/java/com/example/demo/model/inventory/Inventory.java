@@ -48,4 +48,5 @@ public class Inventory {
     private CustomFieldData customFieldData;
     private String imgUrl;
     private String dltUrl;
+    private Double lowestPrice;
 }

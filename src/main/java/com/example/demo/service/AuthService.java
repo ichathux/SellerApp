@@ -62,11 +62,10 @@ public class AuthService {
         sellerDetails.setUsername(savedUser.getUsername());
         sellerDetails.setOwnerName(userDto.getFirstName()+" "+userDto.getLastName());
         sellerDetails.setContactNo(Long.valueOf(userDto.getContact()));
-        sellerDetails.setCity(userDto.getAddress());
+        sellerDetails.setCountry(userDto.getCountry());
         sellerDetails.setDisplayName(userDto.getBusinessName());
         sellerDetails.setCompleted(true);
         sellerDetails.setLogo(applicationParamService.getDefaultLogoUrl());
-
 
         sellerDetailsRepository.save(sellerDetails);
         return userMapper.toUserDto(savedUser);

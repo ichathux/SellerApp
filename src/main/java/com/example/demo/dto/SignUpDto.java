@@ -12,7 +12,7 @@ public class SignUpDto {
     private char[] password;
     private String contact;
     private String businessName;
-    private String address;
+    private String country;
 
 
 }

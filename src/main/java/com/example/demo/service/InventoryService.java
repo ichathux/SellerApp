@@ -4,6 +4,7 @@ import com.example.demo.config.UserAuthProvider;
 import com.example.demo.dto.CustomFieldResponseDto;
 import com.example.demo.dto.InventoryDto;
 import com.example.demo.dto.InventoryResponseDto;
+import com.example.demo.dto.UpdateInventoryDto;
 import com.example.demo.enums.Status;
 import com.example.demo.exception.SpringException;
 import com.example.demo.model.inventory.*;
@@ -177,6 +178,8 @@ public class InventoryService {
                 inventoryResponse.setSubCategoryId(inventory.getSubCategory());
                 inventoryResponse.setCreatedAt(inventory.getCreatedAt());
                 inventoryResponse.setImage(inventory.getImgUrl());
+                inventoryResponse.setItemDescription(inventory.getItemDescription());
+                inventoryResponse.setPublicId(inventory.getDltUrl());
                 returnResponseList.add(inventoryResponse);
             }
 
@@ -210,5 +213,33 @@ public class InventoryService {
         }
     }
 
+    public ResponseEntity<String> updateInventoryItem(UpdateInventoryDto updateInventoryDto){
+        Optional<Inventory> inventory = inventoryRepository.findById(updateInventoryDto.getId());
+        if (inventory.isPresent()){
+            Inventory inventory1 = inventory.get();
+            if (updateInventoryDto.isImageUpdated()){
+                cloudinaryService.removeImg(inventory1.getDltUrl());
+            }
+            inventory1.setName(updateInventoryDto.getName());
+            inventory1.setImgUrl(updateInventoryDto.getImgUrl());
+            inventory1.setDltUrl(updateInventoryDto.getPublicID());
+            inventory1.setItemDescription(updateInventoryDto.getItemDescription());
+            inventory1.setCustomField1(updateInventoryDto.getCustomField1());
+            inventory1.setCustomField1Price(updateInventoryDto.getCustomField1Price());
+            inventory1.setCustomField2(updateInventoryDto.getCustomField2());
+            inventory1.setCustomField2Price(updateInventoryDto.getCustomField2Price());
+            inventory1.setCustomField3(updateInventoryDto.getCustomField3());
+            inventory1.setCustomField3Price(updateInventoryDto.getCustomField3Price());
+            inventory1.setCustomField4(updateInventoryDto.getCustomField4());
+            inventory1.setCustomField4Price(updateInventoryDto.getCustomField4Price());
+            inventory1.setCustomField5(updateInventoryDto.getCustomField5());
+            inventory1.setCustomField5Price(updateInventoryDto.getCustomField5Price());
+            inventory1.setCustomField6(updateInventoryDto.getCustomField6());
+            inventory1.setCustomField6Price(updateInventoryDto.getCustomField6Price());
+            inventoryRepository.save(inventory1);
 
+            return new ResponseEntity<>("Done", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("No Content", HttpStatus.NO_CONTENT);
+    }
 }

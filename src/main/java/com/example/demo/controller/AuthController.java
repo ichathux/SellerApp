@@ -3,7 +3,9 @@ package com.example.demo.controller;
 import com.example.demo.config.UserAuthProvider;
 import com.example.demo.dto.*;
 import com.example.demo.mappers.UserMapper;
+import com.example.demo.model.SellerDetails;
 import com.example.demo.model.User;
+import com.example.demo.repository.SellerDetailsRepository;
 import com.example.demo.service.AuthService;
 import com.example.demo.service.RefreshTokenService;
 import lombok.AllArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Optional;
 
 //import javax.validation.Valid;
 
@@ -23,6 +26,7 @@ import java.net.URI;
 @AllArgsConstructor
 //@CrossOrigin(origins = "http://localhost:4200/")
 public class AuthController {
+    private final SellerDetailsRepository sellerDetailsRepository;
 
     private final AuthService authService;
     private final RefreshTokenService refreshTokenService;
@@ -34,8 +38,12 @@ public class AuthController {
         String token = userAuthProvider.createToken(userDto.getBody());
         userDto.getBody().setToken(token);
         String reqToken = authService.getRequestTokenForUser(userDto.getBody().getUsername());
+        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(loginRequest.getUsername());
+        if (sellerDetails.isPresent()){
+            userDto.getBody().setLogo(sellerDetails.get().getLogo());
+            userDto.getBody().setBusinessName(sellerDetails.get().getDisplayName());
+        }
         userDto.getBody().setRequestToken(reqToken);
-        System.out.println(" user name -> "+SecurityContextHolder.getContext().toString());
         return new ResponseEntity<>(userDto.getBody(),HttpStatus.OK);
     }
 

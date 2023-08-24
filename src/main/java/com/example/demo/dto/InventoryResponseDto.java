@@ -23,5 +23,6 @@ public class InventoryResponseDto {
     private List<CustomFieldResponseDto> variants;
     private Instant createdAt;
     private String image;
+    private String publicId;
 
 }
