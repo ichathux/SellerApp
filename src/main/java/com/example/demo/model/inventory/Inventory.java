@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Data
@@ -30,23 +31,13 @@ public class Inventory {
     private String sellerUsername;
     private Instant createdAt;
     private Instant updatedAt;
-    private Boolean enabled = true;
+    private boolean enabled = true;
     private Status status;
-    private Long customField1 = 0L;
-    private Double customField1Price = 0D;
-    private Long customField2 = 0L;
-    private Double customField2Price = 0D;
-    private Long customField3 = 0L;
-    private Double customField3Price = 0D;
-    private Long customField4 = 0L;
-    private Double customField4Price = 0D;
-    private Long customField5 = 0L;
-    private Double customField5Price = 0D;
-    private Long customField6 = 0L;
-    private Double customField6Price = 0D;
-    @ManyToOne
-    private CustomFieldData customFieldData;
     private String imgUrl;
     private String dltUrl;
-    private Double lowestPrice;
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
+    private List<Variant> variants;
+    private int qty;
+    private double lowestPrice;
+    private String[] variantsList;
 }

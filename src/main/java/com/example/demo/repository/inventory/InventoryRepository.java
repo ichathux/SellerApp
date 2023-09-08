@@ -12,5 +12,4 @@ import java.util.Optional;
 @Repository
 public interface InventoryRepository extends CrudRepository<Inventory, Long> {
     Optional<Page<Inventory>> findAllBySellerUsernameOrderByIdDesc(String sellerUserUsername , Pageable pageRequest);
-    Optional<List<Inventory>> findAllByImgUrl(String imgUrl);
 }

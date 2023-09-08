@@ -6,9 +6,8 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.demo.dto.UserDto;
-import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.AuthService;
+import com.example.demo.service.impl.AuthServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,7 +27,7 @@ public class UserAuthProvider {
     @Value("${security.jwt.token.secret-key:secret-key}")
     private String secretKey;
 
-    private final AuthService userService;
+    private final AuthServiceImpl userService;
     private final UserRepository userRepository;
 
     @PostConstruct

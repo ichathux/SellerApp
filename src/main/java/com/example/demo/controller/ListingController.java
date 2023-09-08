@@ -5,6 +5,7 @@ import com.example.demo.dto.BulkInputDto;
 import com.example.demo.model.ListingFileUpload;
 import com.example.demo.model.Orders;
 import com.example.demo.service.ListingService;
+import com.example.demo.service.SessionUser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -25,13 +26,13 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 public class ListingController {
 
     private final ListingService listingService;
-    private final UserAuthProvider userAuthProvider;
+    private final SessionUser info;
 
     @PostMapping(value = "bulkUpload",
             consumes = MULTIPART_FORM_DATA_VALUE)
     private ResponseEntity<String> uploadBulkListing(
             @RequestPart("file") MultipartFile file) {
-        log.info("bulkUpload, " +userAuthProvider.getCurrentUserUsername());
+        log.info("bulkUpload, " +info.getCurrentUserUsername());
         return listingService.uploadBulkListing(file);
     }
 

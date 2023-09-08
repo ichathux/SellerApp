@@ -1,13 +1,12 @@
-package com.example.demo.service;
+package com.example.demo.service.impl;
 
-import com.example.demo.config.UserAuthProvider;
 import com.example.demo.dto.CustomFieldDto;
-import com.example.demo.dto.SellerProfile;
-import com.example.demo.mappers.UserDetailsMapper;
 import com.example.demo.model.SellerDetails;
 import com.example.demo.model.inventory.CustomFieldData;
 import com.example.demo.repository.SellerDetailsRepository;
 import com.example.demo.repository.inventory.CustomFieldRepository;
+import com.example.demo.service.UserAccountService;
+import com.example.demo.service.SessionUser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,30 +14,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 @Slf4j
-public class AccountService {
-    private final CustomFieldRepository customFieldRepository;
-    private final UserAuthProvider userAuthProvider;
-    private final SellerDetailsRepository sellerDetailsRepository;
-    private final CloudinaryService cloudinaryService;
+public class UserAccountServiceImpl implements UserAccountService {
 
-    public ResponseEntity<SellerDetails> getUserProfile() {
+    private final CustomFieldRepository customFieldRepository;
+    private final SellerDetailsRepository sellerDetailsRepository;
+    private final CloudinaryServiceImpl cloudinaryServiceImpl;
+    private final SessionUser sessionUser;
+
+    @Override
+    public ResponseEntity<SellerDetails> getCurrentUserProfile() {
         Optional<SellerDetails> sellerDetails = sellerDetailsRepository
-                .findByUsername(userAuthProvider.getCurrentUserUsername());
+                .findByUsername(sessionUser.getCurrentUserUsername());
         return sellerDetails
                 .map(details -> new ResponseEntity<>(sellerDetails.get() , HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(null , HttpStatus.NOT_FOUND));
 
     }
-
-    public ResponseEntity<String> createCustomFieldEntries(List<String> list , String name) {
+    @Override
+    public ResponseEntity<String> setVariantsForCustomFields(List<String> list , String name) {
         try {
             CustomFieldData customFieldData = new CustomFieldData();
-            customFieldData.setUsername(userAuthProvider.getCurrentUserUsername());
+            customFieldData.setUsername(sessionUser.getCurrentUserUsername());
             customFieldData.setFieldsUsed(list.size());
             customFieldData.setVariantType(name);
             int size = list.size();
@@ -71,16 +71,21 @@ public class AccountService {
         }
     }
 
-    public ResponseEntity<CustomFieldData> getCurrentUserCustomFieldsVariant(String type) {
+    private ResponseEntity<CustomFieldData> getCurrentUserCustomFieldsVariantFromDatabase(String type) {
         Optional<CustomFieldData> customFieldData = customFieldRepository
-                .findByUsernameAndVariantType(userAuthProvider.getCurrentUserUsername() , type);
+                .findByUsernameAndVariantType(
+                        sessionUser.getCurrentUserUsername() ,
+                        type);
         return customFieldData
-                .map(fieldData -> new ResponseEntity<>(fieldData , HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .map(fieldData -> new ResponseEntity<>(
+                        fieldData ,
+                        HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(
+                        HttpStatus.NOT_FOUND));
     }
-
-    public ResponseEntity<Map<String, String>> setCustomFieldsToVariant(String type) {
-        CustomFieldData customFieldData = getCurrentUserCustomFieldsVariant(type).getBody();
+    @Override
+    public ResponseEntity<Map<String, String>> getVariantsLists(String type) {
+        CustomFieldData customFieldData = getCurrentUserCustomFieldsVariantFromDatabase(type).getBody();
         log.info("custom fields available " + customFieldData);
         Map<String, String> custom = new HashMap<>();
         for (int i = 0; i < Objects.requireNonNull(customFieldData).getFieldsUsed(); i++) {
@@ -108,9 +113,10 @@ public class AccountService {
         }
         return new ResponseEntity<>(custom , HttpStatus.OK);
     }
-
+    @Override
     public ResponseEntity<List<CustomFieldDto>> getCurrentUserVariants() {
-        Optional<Iterable<CustomFieldData>> strings = customFieldRepository.findByUsername(userAuthProvider.getCurrentUserUsername());
+        Optional<Iterable<CustomFieldData>> strings = customFieldRepository
+                .findByUsername(sessionUser.getCurrentUserUsername());
 
         if (strings.isPresent()) {
             Iterator<CustomFieldData> data = strings.get().iterator();
@@ -126,22 +132,22 @@ public class AccountService {
                 for (int i = 0; i < size; i++) {
                     switch (i) {
                         case 0:
-                            list.add(i,customFieldData.getCustomField1());
+                            list.add(i , customFieldData.getCustomField1());
                             break;
                         case 1:
-                            list.add(i,customFieldData.getCustomField2());
+                            list.add(i , customFieldData.getCustomField2());
                             break;
                         case 2:
-                            list.add(i,customFieldData.getCustomField3());
+                            list.add(i , customFieldData.getCustomField3());
                             break;
                         case 3:
-                            list.add(i,customFieldData.getCustomField4());
+                            list.add(i , customFieldData.getCustomField4());
                             break;
                         case 4:
-                            list.add(i,customFieldData.getCustomField5());
+                            list.add(i , customFieldData.getCustomField5());
                             break;
                         case 5:
-                            list.add(i,customFieldData.getCustomField6());
+                            list.add(i , customFieldData.getCustomField6());
                             break;
                     }
                 }
@@ -149,39 +155,50 @@ public class AccountService {
                 customFieldDto.setName(customFieldData.getVariantType());
                 returnList.add(customFieldDto);
             }
-            return new ResponseEntity<>(returnList, HttpStatus.OK);
+            return new ResponseEntity<>(
+                    returnList ,
+                    HttpStatus.OK);
         }
-        return new ResponseEntity<>(null,HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(
+                null ,
+                HttpStatus.NO_CONTENT);
     }
-
+    @Override
     public ResponseEntity<String> setInventoryStatus(boolean status) {
-        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(userAuthProvider.getCurrentUserUsername());
-        if (sellerDetails.isPresent()){
+        Optional<SellerDetails> sellerDetails = sellerDetailsRepository
+                .findByUsername(sessionUser.getCurrentUserUsername());
+        if (sellerDetails.isPresent()) {
             sellerDetails.get().setInventory(status);
             sellerDetailsRepository.save(sellerDetails.get());
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
+    @Override
     public ResponseEntity<Boolean> getCurrentUserInventoryStatus() {
-        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(userAuthProvider.getCurrentUserUsername());
-        if (sellerDetails.isPresent()){
-            return new ResponseEntity<>(sellerDetails.get().isInventory(),HttpStatus.OK);
-        }
-        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        Optional<SellerDetails> sellerDetails = sellerDetailsRepository
+                .findByUsername(sessionUser.getCurrentUserUsername());
+        return sellerDetails
+                .map(details ->
+                        new ResponseEntity<>(
+                                details.isInventory() ,
+                                HttpStatus.OK))
+                .orElseGet(() ->
+                        new ResponseEntity<>(
+                                null ,
+                                HttpStatus.NO_CONTENT));
     }
-
+    @Override
     public ResponseEntity<SellerDetails> updateSellerDetails(SellerDetails sellerDetails) {
         System.out.println(sellerDetails);
-        removeCloudinaryImage(sellerDetails.getLogoPublicIdOld());
-        return new ResponseEntity<>(sellerDetailsRepository.save(sellerDetails), HttpStatus.OK);
+
+        String oldPublicId = sellerDetails.getLogoPublicIdOld();
+        if (oldPublicId != null){
+            cloudinaryServiceImpl.removeImg(oldPublicId);
+        }
+        return new ResponseEntity<>(
+                sellerDetailsRepository.save(sellerDetails) ,
+                HttpStatus.OK);
     }
 
-    public ResponseEntity<String> removeCloudinaryImage(String publicId){
-        if ( publicId != null){
-            return cloudinaryService.removeImg(publicId);
-        }
-        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
-    }
 }

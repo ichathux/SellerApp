@@ -10,5 +10,5 @@ import java.util.Optional;
 @Repository
 public interface SubCategoryRepository extends CrudRepository<SubCategory, Long> {
 
-    Optional<Iterable<SubCategory>> findAllByCategory(Long category);
+    Optional<Iterable<SubCategory>> findAllByCategory(Category category);
 }

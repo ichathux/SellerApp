@@ -37,4 +37,6 @@ public class InventoryDto {
     private String variantType;
     private String imgUrl;
     private String dltUrl;
+    private Double lowestPrice;
+    private int totalItems;
 }
