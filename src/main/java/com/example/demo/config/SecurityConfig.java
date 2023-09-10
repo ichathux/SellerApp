@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((requests) -> requests
                         .regexMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
+                        .antMatchers("/swagger-ui/**", "/v2/api-docs", "/swagger-resources/**", "/v3/api-docs").permitAll() // Allow access to Swagger UI and JSON
                         .anyRequest().authenticated())
         ;
         return http.build();

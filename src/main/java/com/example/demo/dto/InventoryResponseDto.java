@@ -30,6 +30,6 @@ public class InventoryResponseDto {
     private String publicId;
     private Double lowestPrice;
     private int qty;
-    private List<String> imgList;
+    private Set<String> imgList;
 
 }

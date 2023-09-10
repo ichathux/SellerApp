@@ -37,65 +37,6 @@ public class InventoryServiceImpl implements InventoryService {
     private final CloudinaryServiceImpl cloudinaryServiceImpl;
     private final SessionUser sessionUser;
 
-//    @Override
-//    public ResponseEntity<String> addSingleInventoryItemToDB(
-//            InventoryDto inventoryDto) {
-//        String username = userAuthProvider.getCurrentUserUsername();
-//        log.info(username + ", addSingleItemToInventory, " + inventoryDto);
-//        Brand brand = new Brand();
-//        Optional<Brand> brandOpt = brandRepository.findByName(inventoryDto.getBrand());
-//
-//        if (brandOpt.isPresent()) {
-//            brand = brandOpt.get();
-//        } else {
-//            brand.setName(inventoryDto.getBrand());
-//            brand = brandRepository.save(brand);
-//        }
-//
-//        Inventory inventory = new Inventory(
-//                inventoryDto.getName() ,
-//                subCategoryRepository
-//                        .findById(inventoryDto.getSubCategoryId())
-//                        .orElseThrow(() -> new SpringException("subcategory not found")) ,
-//                brand ,
-//                null ,
-//                inventoryDto.getItemDescription() ,
-//                username ,
-//                Instant.now() ,
-//                Instant.now() ,
-//                true ,
-//                Status.IN_STOCK ,
-//                inventoryDto.getCustomField1() ,
-//                inventoryDto.getCustomField1Price() ,
-//                inventoryDto.getCustomField2() ,
-//                inventoryDto.getCustomField2Price() ,
-//                inventoryDto.getCustomField3() ,
-//                inventoryDto.getCustomField3Price() ,
-//                inventoryDto.getCustomField4() ,
-//                inventoryDto.getCustomField4Price() ,
-//                inventoryDto.getCustomField5() ,
-//                inventoryDto.getCustomField5Price() ,
-//                inventoryDto.getCustomField6() ,
-//                inventoryDto.getCustomField6Price() ,
-//                customFieldRepository
-//                        .findByUsernameAndVariantType(username , inventoryDto.getVariantType().trim())
-//                        .orElseThrow(() -> new SpringException("Custom field not found")) ,
-//                inventoryDto.getImgUrl() ,
-//                inventoryDto.getImgUrl() ,
-//                inventoryDto.getLowestPrice() ,
-//                inventoryDto.getTotalItems());
-//
-//        inventory.setCustomFieldData(customFieldRepository
-//                .findByUsernameAndVariantType(username , inventoryDto.getVariantType().trim())
-//                .orElseThrow(() -> new SpringException("Custom field not found")));
-//        inventory.setDltUrl(inventoryDto.getDltUrl());
-//        inventory.setImgUrl(inventoryDto.getImgUrl());
-//
-//        inventoryRepository.save(inventory);
-//        return new ResponseEntity<>("done" , HttpStatus.OK);
-//
-//    }
-
     @Override
     public ResponseEntity<Iterable<Category>> getCategories() {
         return new ResponseEntity<>(categoryRepository.findAll() , HttpStatus.OK);
@@ -203,8 +144,8 @@ public class InventoryServiceImpl implements InventoryService {
         return variantResponseDtos;
     }
 
-    private List<String> manipulateImgList(Inventory inventory){
-        List<String> imgList = new ArrayList<>();
+    private Set<String> manipulateImgList(Inventory inventory){
+        Set<String> imgList = new HashSet<>();
         imgList.add(inventory.getImgUrl());
         for (Variant variant : inventory.getVariants()){
             imgList.add(variant.getImgUrl());
