@@ -10,11 +10,14 @@ import java.util.List;
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class VariantResponseDto {
+    private long id;
     private List<String> name;
     private double price;
     private int qty;
     private String img;
     private String publicId;
-    private boolean isAvailable;
+    private boolean isDisabled;
+    private boolean isOutOfStock;
 }

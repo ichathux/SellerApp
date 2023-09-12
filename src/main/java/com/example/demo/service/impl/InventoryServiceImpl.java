@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Slf4j
 public class InventoryServiceImpl implements InventoryService {
+    private final VariantRepository variantRepository;
     private final CustomFieldRepository customFieldRepository;
     private final InventoryRepository inventoryRepository;
     private final CategoryRepository categoryRepository;
@@ -68,6 +69,7 @@ public class InventoryServiceImpl implements InventoryService {
                         sessionUser.getCurrentUserUsername() ,
                         PageRequest
                                 .of(page , size));
+
         List<InventoryResponseDto> responseList = new ArrayList<>();
         if (itemInventory.isPresent()) {
 
@@ -91,29 +93,34 @@ public class InventoryServiceImpl implements InventoryService {
                 responseList.add(singleResponse);
             }
             int totalPages = itemInventory.get().getTotalPages() * itemInventory.get().getSize();
+            System.out.println("getSize : "+itemInventory.get().getSize());
+            System.out.println("getTotalPages : "+itemInventory.get().getTotalPages());
+            System.out.println("getTotalElements : "+itemInventory.get().getTotalElements());
+            System.out.println("getPageable : "+itemInventory.get().getPageable());
             return new ResponseEntity<>(new PageImpl<>(
                     responseList ,
                     itemInventory.get().getPageable() ,
-                    totalPages) ,
+                    itemInventory.get().getTotalElements()) ,
                     HttpStatus.OK);
         }
         return new ResponseEntity<>(null , HttpStatus.NO_CONTENT);
     }
+
     private final ObjectMapper objectMapper;
 
-    private ArrayList<Set<String>> manipulateDummyVariantsAsList(List<Variant> variants){
+    private ArrayList<Set<String>> manipulateDummyVariantsAsList(List<Variant> variants) {
         ArrayList<Set<String>> vs = new ArrayList<>();
-        for (Variant variant : variants){
+        for (Variant variant : variants) {
             try {
-                String [] v = objectMapper.readValue(variant.getVariants(), String[].class);
+                String[] v = objectMapper.readValue(variant.getVariants() , String[].class);
                 int i = 0;
-                for (String s : v){
-                    if (i < vs.size()){
+                for (String s : v) {
+                    if (i < vs.size()) {
                         vs.get(i).add(s);
-                    }else{
+                    } else {
                         Set<String> v2 = new TreeSet<>();
                         v2.add(s);
-                        vs.add(i, v2);
+                        vs.add(i , v2);
                     }
                     i++;
                 }
@@ -124,30 +131,33 @@ public class InventoryServiceImpl implements InventoryService {
         }
         return vs;
     }
-    private ArrayList <VariantResponseDto> manipulateVariants(List<Variant> variants){
-        ArrayList <VariantResponseDto> variantResponseDtos = new ArrayList<>();
-        for(Variant variant : variants){
-            try{
-                String [] v = objectMapper.readValue(variant.getVariants(), String[].class);
-                VariantResponseDto dto = new VariantResponseDto(List.of(v),
-                        variant.getPrice(),
-                        variant.getQty(),
-                        variant.getImgUrl(),
-                        variant.getPublicID(),
-                        variant.getQty() > 0);
+
+    private ArrayList<VariantResponseDto> manipulateVariants(List<Variant> variants) {
+        ArrayList<VariantResponseDto> variantResponseDtos = new ArrayList<>();
+        for (Variant variant : variants) {
+            try {
+                String[] v = objectMapper.readValue(variant.getVariants() , String[].class);
+                VariantResponseDto dto = new VariantResponseDto(variant.getId() ,
+                        List.of(v) ,
+                        variant.getPrice() ,
+                        variant.getQty() ,
+                        variant.getImgUrl() ,
+                        variant.getPublicID() ,
+                        variant.isDisable() ,
+                        variant.isOutOfStock());
                 variantResponseDtos.add(dto);
 
-            }catch (Exception e){
-                log.error("manipulateVariants, "+e.getMessage());
+            } catch (Exception e) {
+                log.error("manipulateVariants, " + e.getMessage());
             }
         }
         return variantResponseDtos;
     }
 
-    private Set<String> manipulateImgList(Inventory inventory){
+    private Set<String> manipulateImgList(Inventory inventory) {
         Set<String> imgList = new HashSet<>();
         imgList.add(inventory.getImgUrl());
-        for (Variant variant : inventory.getVariants()){
+        for (Variant variant : inventory.getVariants()) {
             imgList.add(variant.getImgUrl());
         }
         return imgList;
@@ -172,39 +182,61 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public ResponseEntity<String> updateInventoryItem(UpdateInventoryDto updateInventoryDto) {
-//        Optional<Inventory> inventory = inventoryRepository.findById(updateInventoryDto.getId());
-//        if (inventory.isPresent()) {
-//            Inventory inventory1 = inventory.get();
-//            if (updateInventoryDto.isImageUpdated()) {
-//                cloudinaryServiceImpl.removeImg(inventory1.getDltUrl());
-//            }
-//            inventory1.setName(updateInventoryDto.getName());
-//            inventory1.setImgUrl(updateInventoryDto.getImgUrl());
-//            inventory1.setDltUrl(updateInventoryDto.getPublicID());
-//            inventory1.setItemDescription(updateInventoryDto.getItemDescription());
-//            inventory1.setCustomField1(updateInventoryDto.getCustomField1());
-//            inventory1.setCustomField1Price(updateInventoryDto.getCustomField1Price());
-//            inventory1.setCustomField2(updateInventoryDto.getCustomField2());
-//            inventory1.setCustomField2Price(updateInventoryDto.getCustomField2Price());
-//            inventory1.setCustomField3(updateInventoryDto.getCustomField3());
-//            inventory1.setCustomField3Price(updateInventoryDto.getCustomField3Price());
-//            inventory1.setCustomField4(updateInventoryDto.getCustomField4());
-//            inventory1.setCustomField4Price(updateInventoryDto.getCustomField4Price());
-//            inventory1.setCustomField5(updateInventoryDto.getCustomField5());
-//            inventory1.setCustomField5Price(updateInventoryDto.getCustomField5Price());
-//            inventory1.setCustomField6(updateInventoryDto.getCustomField6());
-//            inventory1.setCustomField6Price(updateInventoryDto.getCustomField6Price());
-//            inventoryRepository.save(inventory1);
-//
-//            return new ResponseEntity<>("Done" , HttpStatus.OK);
-//        }
-        return new ResponseEntity<>("No Content" , HttpStatus.NO_CONTENT);
+    public ResponseEntity<String> updateInventoryItem(InventoryResponseDto dto) {
+        System.out.println("got to back end");
+//        System.out.println(dto);
+
+        try {
+            Optional<Inventory> relatedInventory = inventoryRepository.findById(dto.getId());
+            if (relatedInventory.isPresent()) {
+                Inventory inventory = relatedInventory.get();
+                inventory.setName(dto.getName());
+                Optional<Brand> brand = brandRepository.findByName(dto.getBrand());
+                if (brand.isPresent()) {
+                    log.info("brand already exist");
+                    inventory.setBrand(brand.get());
+                } else {
+                    log.info("added new brand " + dto.getBrand());
+                    String brandName = dto.getBrand();
+                    Brand brand1 = new Brand();
+                    brand1.setName(brandName);
+                    brand1 = brandRepository.save(brand1);
+                    inventory.setBrand(brand1);
+                }
+                inventory.setItemDescription(dto.getItemDescription());
+                inventory.setVariants(updateVariantsDetails(dto.getVariants()));
+                inventoryRepository.save(inventory);
+            } else {
+                log.error(sessionUser.getCurrentUserUsername() + " not inventory found for given id " + this.getClass().getName());
+                return new ResponseEntity<>("Error" , HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>("Done" , HttpStatus.OK);
+        } catch (
+                Exception e) {
+            e.getStackTrace();
+            return new ResponseEntity<>("Error" , HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    private List<Variant> updateVariantsDetails(List<VariantResponseDto> variantDto) {
+        List<Variant> variants = new ArrayList<>();
+        for (var v : variantDto) {
+            Variant variant = variantRepository.findById(v.getId()).orElseThrow(() -> new RuntimeException("No variant found"));
+            variant.setQty(v.getQty());
+            variant.setPrice(v.getPrice());
+            variants.add(variant);
+
+            log.info("updating : "+variant.getVariants());
+            log.info("updating : "+variant.getQty());
+            log.info("updating : "+variant.getPrice());
+        }
+        return variants;
     }
 
     @Override
     public ResponseEntity<String> addInventory(InventoryRequestDto inventoryRequestDto) throws JsonProcessingException {
-        log.info("inserting inventory "+inventoryRequestDto);
+        log.info("inserting inventory " + inventoryRequestDto);
         try {
             Inventory inventory = new Inventory();
             inventory.setName(inventoryRequestDto.getName());
@@ -238,8 +270,6 @@ public class InventoryServiceImpl implements InventoryService {
                 ObjectMapper objectMapper = new ObjectMapper();
                 String variants = objectMapper.writeValueAsString(var.getVariants());
                 variant.setVariants(variants);
-
-//                variant.setDataArray(var.getVariants().toArray(new String[var.getVariants().size()]));
                 variant.setQty(var.getQty());
                 variant.setPrice(var.getPrice());
                 variant.setItem(inventory);
@@ -252,6 +282,7 @@ public class InventoryServiceImpl implements InventoryService {
             return new ResponseEntity<>("Done" ,
                     HttpStatus.OK);
         } catch (Exception e) {
+            e.getStackTrace();
             return new ResponseEntity<>(e.getMessage() ,
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }

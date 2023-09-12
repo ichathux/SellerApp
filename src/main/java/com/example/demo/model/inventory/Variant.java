@@ -19,5 +19,6 @@ public class Variant {
     private Inventory item;
     private String imgUrl;
     private String publicID;
-    private String[] dataArray;
+    private boolean isDisable = false;
+    private boolean isOutOfStock = false;
 }

@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.Optional;
 
-//import javax.validation.Valid;
-
+/**
+ * authentication flow
+ */
 @RestController
 @RequestMapping("/api/auth")
 @Slf4j
@@ -27,6 +28,11 @@ public class AuthController {
     private final AuthService authService;
     private final UserAuthProvider userAuthProvider;
 
+    /**
+     * user login
+     * @param loginRequest
+     * @return ResponseEntity<UserDto>
+     */
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody CredentialDto loginRequest){
         log.info("Login request from :"+loginRequest);
@@ -42,6 +48,12 @@ public class AuthController {
         userDto.getBody().setRequestToken(reqToken);
         return new ResponseEntity<>(userDto.getBody(),HttpStatus.OK);
     }
+
+    /**
+     * signup new user
+     * @param signUpDto
+     * @return ResponseEntity<UserDto>
+     */
 
     @PostMapping("/register")
     public ResponseEntity<UserDto> register(@RequestBody SignUpDto signUpDto){

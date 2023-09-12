@@ -19,7 +19,7 @@ public interface InventoryService {
     ResponseEntity<Iterable<Brand>> getBrands();
     ResponseEntity<Page<InventoryResponseDto>> getInventoryItemsResponse(int page , int size);
     ResponseEntity<String> deleteInventoryItem(Long id);
-    ResponseEntity<String> updateInventoryItem(UpdateInventoryDto updateInventoryDto);
+    ResponseEntity<String> updateInventoryItem(InventoryResponseDto dto);
 
     ResponseEntity<String> addInventory(InventoryRequestDto inventoryRequestDto) throws JsonProcessingException;
 }

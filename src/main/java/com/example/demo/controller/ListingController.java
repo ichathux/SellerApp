@@ -19,6 +19,9 @@ import java.util.List;
 
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
+/**
+ * manage order list that have to seller by their clients
+ */
 @RestController
 @RequestMapping("api/listing")
 @AllArgsConstructor
