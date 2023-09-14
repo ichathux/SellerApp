@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VariantResponseDto {
-    private long id;
+    private String id;
     private List<String> name;
     private double price;
     private int qty;

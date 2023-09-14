@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 public class InventoryRequestDto {
     private String name;
-    private long subCategoryId;
+    private String subCategoryId;
     private String brand;
     private String itemDescription;
     private String imgUrl;

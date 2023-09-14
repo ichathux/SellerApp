@@ -6,8 +6,9 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.demo.dto.UserDto;
+import com.example.demo.mappers.UserMapper;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.impl.AuthServiceImpl;
+import com.example.demo.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,9 +27,8 @@ public class UserAuthProvider {
 
     @Value("${security.jwt.token.secret-key:secret-key}")
     private String secretKey;
-
-    private final AuthServiceImpl userService;
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @PostConstruct
     protected void init() {
@@ -68,15 +68,13 @@ public class UserAuthProvider {
     }
 
     public Authentication validateTokenStrongly(String token) {
+        System.out.println(token);
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
         JWTVerifier verifier = JWT.require(algorithm)
                 .build();
-
         DecodedJWT decoded = verifier.verify(token);
-
-        UserDto user = userService.findByLogin(decoded.getIssuer());
-
+        UserDto user = userMapper.toUserDto(userRepository.findByUsername(decoded.getIssuer()).get());
+        System.out.println(user);
         return new UsernamePasswordAuthenticationToken(user , null , Collections.emptyList());
     }
 

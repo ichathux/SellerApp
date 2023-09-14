@@ -1,17 +1,9 @@
 package com.example.demo.dto;
 
-import com.example.demo.model.inventory.Brand;
-import com.example.demo.model.inventory.SubCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import java.io.File;
 
 @Data
 @Builder

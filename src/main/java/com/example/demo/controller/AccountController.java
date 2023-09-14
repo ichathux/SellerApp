@@ -96,4 +96,6 @@ public class AccountController {
     private ResponseEntity<SellerDetails> updateGeneralSettings(@RequestBody SellerDetails sellerDetails){
         return accountService.updateSellerDetails(sellerDetails);
     }
+
+
 }

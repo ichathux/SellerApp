@@ -12,7 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.weaver.ast.Var;
+//import org.aspectj.weaver.ast.Var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InventoryServiceImpl implements InventoryService {
     private final VariantRepository variantRepository;
-    private final CustomFieldRepository customFieldRepository;
     private final InventoryRepository inventoryRepository;
     private final CategoryRepository categoryRepository;
     private final SubCategoryRepository subCategoryRepository;
@@ -45,7 +44,7 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public ResponseEntity<Iterable<SubCategory>> getSubCategories(
-            Long category) {
+            String category) {
         Optional<Category> category1 = categoryRepository.findById(category);
         Optional<Iterable<SubCategory>> categories = subCategoryRepository.findAllByCategory(category1.orElseThrow());
 
@@ -164,7 +163,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public ResponseEntity<String> deleteInventoryItem(Long id) {
+    public ResponseEntity<String> deleteInventoryItem(String id) {
         log.info(userAuthProvider.getCurrentUserUsername() + ", delete inventory item, " + id);
         try {
             Optional<Inventory> inventory = inventoryRepository.findById(id);
@@ -174,10 +173,10 @@ public class InventoryServiceImpl implements InventoryService {
                 inventoryRepository.deleteById(id);
             }
 
-            return new ResponseEntity<>("done" , HttpStatus.OK);
+            return new ResponseEntity<>("{\"message\": \"Successfully Deleted.\"}" , HttpStatus.OK);
         } catch (Exception e) {
             log.error(userAuthProvider.getCurrentUserUsername() + ", error occurred while deleting inventory, " + id);
-            return new ResponseEntity<>("error" , HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("{\"message\": \"Error Occurred.\"}" , HttpStatus.NOT_FOUND);
         }
     }
 
@@ -208,13 +207,13 @@ public class InventoryServiceImpl implements InventoryService {
                 inventoryRepository.save(inventory);
             } else {
                 log.error(sessionUser.getCurrentUserUsername() + " not inventory found for given id " + this.getClass().getName());
-                return new ResponseEntity<>("Error" , HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>("{\"message\": \"Error Occurred.\"}" , HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>("Done" , HttpStatus.OK);
+            return new ResponseEntity<>("{\"message\": \"Successfully updated.\"}" , HttpStatus.OK);
         } catch (
                 Exception e) {
             e.getStackTrace();
-            return new ResponseEntity<>("Error" , HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("{\"message\": \"Error Occurred.\"}" , HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -242,14 +241,12 @@ public class InventoryServiceImpl implements InventoryService {
             inventory.setName(inventoryRequestDto.getName());
             Brand brand = new Brand();
             Optional<Brand> brandOpt = brandRepository.findByName(inventoryRequestDto.getBrand());
-
             if (brandOpt.isPresent()) {
                 brand = brandOpt.get();
             } else {
                 brand.setName(inventoryRequestDto.getBrand());
                 brand = brandRepository.save(brand);
             }
-
             inventory.setBrand(brand);
             inventory.setItemDescription(inventoryRequestDto.getItemDescription());
             inventory.setImgUrl(inventoryRequestDto.getImgUrl());
@@ -260,10 +257,9 @@ public class InventoryServiceImpl implements InventoryService {
             inventory.setEnabled(true);
             inventory.setLowestPrice(inventoryRequestDto.getLowestPrice());
             inventory.setQty(inventoryRequestDto.getQty());
-
             Optional<SubCategory> subCategory = subCategoryRepository.findById(inventoryRequestDto.getSubCategoryId());
             subCategory.ifPresent(inventory::setSubCategory);
-
+            System.out.println("start adding variants");
             List<Variant> variantList = new ArrayList<>();
             for (InventoryVariantDto var : inventoryRequestDto.getVariants()) {
                 Variant variant = new Variant();
@@ -272,18 +268,20 @@ public class InventoryServiceImpl implements InventoryService {
                 variant.setVariants(variants);
                 variant.setQty(var.getQty());
                 variant.setPrice(var.getPrice());
-                variant.setItem(inventory);
                 variant.setImgUrl(var.getImgUrl());
                 variant.setPublicID(var.getPublic_id());
                 variantList.add(variant);
+
             }
+            variantList = variantRepository.saveAll(variantList); // in mongodb
             inventory.setVariants(variantList);
             inventoryRepository.save(inventory);
-            return new ResponseEntity<>("Done" ,
+            return new ResponseEntity<>("{\"message\": \"Successfully added.\"}" ,
                     HttpStatus.OK);
         } catch (Exception e) {
             e.getStackTrace();
-            return new ResponseEntity<>(e.getMessage() ,
+            log.error(e.getMessage());
+            return new ResponseEntity<>("{\"message\": \""+e.getMessage()+"\"}" ,
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 

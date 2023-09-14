@@ -59,8 +59,9 @@ public class InventoryController {
      * @param id
      * @return ResponseEntity<' Done '> or ResponseEntity<'error'>
      */
-    @DeleteMapping("delete")
-    private ResponseEntity<String> delete(@RequestParam("itemId") Long id) {
+    @DeleteMapping("delete/{id}")
+    private ResponseEntity<String> delete(@PathVariable String id) {
+        System.out.println("deleting "+id);
         return inventoryService.deleteInventoryItem(id);
     }
 
@@ -89,7 +90,7 @@ public class InventoryController {
      */
     @GetMapping("getSubCategories")
     private ResponseEntity<Iterable<SubCategory>> getSubCategories(
-            @RequestParam("id") Long category) {
+            @RequestParam("id") String category) {
         return inventoryService.getSubCategories(category);
     }
 

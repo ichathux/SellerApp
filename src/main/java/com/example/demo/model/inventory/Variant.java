@@ -1,22 +1,21 @@
 package com.example.demo.model.inventory;
 
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.*;
-import java.math.BigDecimal;
-
-@Entity
+@Document("variant")
 @Data
 public class Variant {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private String id;
     private String variants;
     private int qty;
     private double price;
-    @ManyToOne
-    @JoinColumn(name = "item_id")
-    private Inventory item;
+//    @DBRef
+//    private Inventory item;
     private String imgUrl;
     private String publicID;
     private boolean isDisable = false;

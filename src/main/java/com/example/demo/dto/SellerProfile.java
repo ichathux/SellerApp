@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Id;
+//import javax.persistence.Id;
 
 @AllArgsConstructor
 @NoArgsConstructor

@@ -4,6 +4,7 @@ import com.example.demo.model.Customer;
 import com.example.demo.model.Orders;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,7 +12,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 @Repository
-public interface OrderRepository extends CrudRepository<Orders, Long> {
+public interface OrderRepository extends MongoRepository<Orders, String> {
     Optional<Page<Orders>> findAllBySellerUsernameOrderByIdDesc(String sellerUsername,
                                                                 Pageable pageable);
     Optional<Page<Orders>> findBySellerUsernameAndCreatedAtBetweenOrderByIdDesc(String sellerUsername,

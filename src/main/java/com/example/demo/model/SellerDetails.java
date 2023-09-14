@@ -3,17 +3,22 @@ package com.example.demo.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import javax.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
+//import javax.persistence.*;
+
+//@Entity
+@Document("sellerDetails")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SellerDetails {
 
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
     private Long contactNo;
     private String username;
     private String ownerName;

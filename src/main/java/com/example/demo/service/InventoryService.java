@@ -15,10 +15,10 @@ import org.springframework.http.ResponseEntity;
 public interface InventoryService {
 //    ResponseEntity<String> addSingleInventoryItemToDB(InventoryDto inventoryDto);
     ResponseEntity<Iterable<Category>> getCategories();
-    ResponseEntity<Iterable<SubCategory>> getSubCategories(Long category);
+    ResponseEntity<Iterable<SubCategory>> getSubCategories(String category);
     ResponseEntity<Iterable<Brand>> getBrands();
     ResponseEntity<Page<InventoryResponseDto>> getInventoryItemsResponse(int page , int size);
-    ResponseEntity<String> deleteInventoryItem(Long id);
+    ResponseEntity<String> deleteInventoryItem(String id);
     ResponseEntity<String> updateInventoryItem(InventoryResponseDto dto);
 
     ResponseEntity<String> addInventory(InventoryRequestDto inventoryRequestDto) throws JsonProcessingException;

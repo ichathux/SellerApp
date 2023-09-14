@@ -5,26 +5,28 @@ import com.example.demo.enums.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.*;
+//import javax.persistence.*;
 import java.time.Instant;
 import java.util.List;
 
-@Entity
+//@Entity
+@Document("inventory")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Inventory {
 
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
     private String name;
-    @ManyToOne
-    @JoinColumn(name = "sub_category_id", referencedColumnName = "id")
+    @DBRef
     private SubCategory subCategory;
-    @ManyToOne
-    @JoinColumn(name = "Brand_id", referencedColumnName = "id")
+    @DBRef
     private Brand brand;
     private String serialNumber;
     private String itemDescription;
@@ -35,7 +37,7 @@ public class Inventory {
     private Status status;
     private String imgUrl;
     private String dltUrl;
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
+    @DBRef
     private List<Variant> variants;
     private int qty;
     private double lowestPrice;

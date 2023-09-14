@@ -27,7 +27,7 @@ public class TrackingController {
      */
     @PostMapping("update")
     private ResponseEntity<String> updateTrackingStep(@RequestParam(name = "type") int state ,
-                                                      @RequestParam(name = "id") long orderId ,
+                                                      @RequestParam(name = "id") String orderId ,
                                                       @RequestParam(name = "token") String token) {
         boolean st;
         st = state == 1;

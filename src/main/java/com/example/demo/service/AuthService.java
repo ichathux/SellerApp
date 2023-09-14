@@ -9,11 +9,12 @@ public interface AuthService {
 
     ResponseEntity<UserDto> login(CredentialDto credentialsDto);
 
-    UserDto register(SignUpDto userDto);
+    ResponseEntity<UserDto> register(SignUpDto userDto);
 
     String getRequestTokenForUser(String username);
 
     UserDto findByLogin(String login);
 
-    void setRequestTokenForUser(String token , String username);
+//    void setRequestTokenForUser(String token , String username);
+    ResponseEntity<String> deleteUser(String username);
 }

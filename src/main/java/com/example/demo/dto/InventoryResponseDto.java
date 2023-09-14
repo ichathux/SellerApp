@@ -18,7 +18,7 @@ import java.util.Set;
 @NoArgsConstructor
 public class InventoryResponseDto {
 
-    private Long id;
+    private String id;
     private String name;
     private SubCategory subCategoryId;
     private String brand;

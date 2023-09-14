@@ -24,7 +24,7 @@ public class TrackingServiceImpl implements TrackingService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
 
-    private boolean checkOrderIdIsValid(Long orderID , String token) {
+    private boolean checkOrderIdIsValid(String orderID , String token) {
         Optional<Orders> order = orderRepository.findById(orderID);
         if (order.isPresent()) {
             Optional<User> user = userRepository.findByUsername(order.get().getSellerUsername());
@@ -33,7 +33,7 @@ public class TrackingServiceImpl implements TrackingService {
     }
 
     @Override
-    public ResponseEntity<String> changeTrackingStage(Long orderId ,
+    public ResponseEntity<String> changeTrackingStage(String orderId ,
                                                       String token ,
                                                       boolean state) {
 

@@ -36,17 +36,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody CredentialDto loginRequest){
         log.info("Login request from :"+loginRequest);
-        ResponseEntity<UserDto> userDto = authService.login(loginRequest);
-        String token = userAuthProvider.createToken(userDto.getBody());
-        userDto.getBody().setToken(token);
-        String reqToken = authService.getRequestTokenForUser(userDto.getBody().getUsername());
-        Optional<SellerDetails> sellerDetails = sellerDetailsRepository.findByUsername(loginRequest.getUsername());
-        if (sellerDetails.isPresent()){
-            userDto.getBody().setLogo(sellerDetails.get().getLogo());
-            userDto.getBody().setBusinessName(sellerDetails.get().getDisplayName());
-        }
-        userDto.getBody().setRequestToken(reqToken);
-        return new ResponseEntity<>(userDto.getBody(),HttpStatus.OK);
+        return authService.login(loginRequest);
     }
 
     /**
@@ -58,13 +48,13 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserDto> register(@RequestBody SignUpDto signUpDto){
         log.info("register request get" +signUpDto);
-        UserDto createdUser = authService.register(signUpDto);
-        String token = userAuthProvider.createToken(createdUser);
-        createdUser.setToken(token);
-        authService.setRequestTokenForUser(token,createdUser.getUsername());
-        createdUser.setRequestToken(token);
-        return ResponseEntity.created(URI.create("/users/" + createdUser.getId ())).body(createdUser);
+        return authService.register(signUpDto);
 
+    }
+
+    @DeleteMapping("{username}")
+    private void delete(@PathVariable String username){
+        authService.deleteUser(username);
     }
 
 }
